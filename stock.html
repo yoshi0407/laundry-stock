@@ -426,7 +426,7 @@ async function changeStock(id,delta){
   }
 }
 function getNotifyEmail(){
-  return localStorage.getItem('notify_email') || 'yoshi.0723.0407@gmail.com';
+  return localStorage.getItem('notify_email') || '';
 }
 function saveNotifyEmail(){
   var v = document.getElementById('notifyEmail').value.trim();
@@ -492,7 +492,7 @@ function updateNotifyPermStatus(){
   }
   // メールアドレスフィールドに現在の値をセット
   var saved = localStorage.getItem('notify_email');
-  if(saved) document.getElementById('notifyEmail').value = saved;
+  if(saved){ var el=document.getElementById('notifyEmail'); if(el) el.value=saved; }
 }
 function renderOrders(){
   var sf=document.getElementById('orderStatusFilter').value;
@@ -514,13 +514,25 @@ function renderOrders(){
       +'<div class="order-actions">'+ac+'</div></div>';
   }).join('');
 }
-async function updateOrderStatus(id,status){await sb.from('orders').update({status:status,updated_at:new Date().toISOString()}).eq('id',id);}
-async function receiveOrder(orderId,itemId,qty){
-  await sb.from('orders').update({status:'received',updated_at:new Date().toISOString()}).eq('id',orderId);
-  var item=items.find(function(i){return i.id===itemId;});
-  if(item)await sb.from('items').update({stock:item.stock+qty}).eq('id',itemId);
+async function updateOrderStatus(id,status){
+  var o=orders.find(function(o){return o.id===id;});
+  if(o){o.status=status;renderOrders();}
+  await sb.from('orders').update({status:status,updated_at:new Date().toISOString()}).eq('id',id);
 }
-async function deleteOrder(id){if(!confirm('この発注記録を削除しますか？'))return;await sb.from('orders').delete().eq('id',id);}
+async function receiveOrder(orderId,itemId,qty){
+  var o=orders.find(function(o){return o.id===orderId;});
+  if(o){o.status='received';renderOrders();}
+  var item=items.find(function(i){return i.id===itemId;});
+  if(item){item.stock=item.stock+qty;renderItems();}
+  await sb.from('orders').update({status:'received',updated_at:new Date().toISOString()}).eq('id',orderId);
+  if(item)await sb.from('items').update({stock:item.stock}).eq('id',itemId);
+}
+async function deleteOrder(id){
+  if(!confirm('この発注記録を削除しますか？'))return;
+  orders=orders.filter(function(o){return o.id!==id;});
+  renderOrders();
+  await sb.from('orders').delete().eq('id',id);
+}
 function openAddModal(){
   document.getElementById('modalTitle').textContent='品目を追加';
   document.getElementById('editId').value='';
