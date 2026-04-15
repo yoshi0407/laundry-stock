@@ -387,11 +387,27 @@ function renderItems() {
 async function changeStock(id,delta){
   var item=items.find(function(i){return i.id===id;});
   if(!item)return;
+  var prevStock=item.stock;
   var newStock=Math.max(0,item.stock+delta);
   item.stock=newStock;
   renderItems();
   var r=await sb.from('items').update({stock:newStock}).eq('id',id);
-  if(r.error){showErr('更新エラー：'+r.error.message);}
+  if(r.error){showErr('更新エラー：'+r.error.message);return;}
+  // 在庫が最低在庫数を下回った瞬間だけ通知（下回る前→下回った時のみ）
+  if(prevStock>=item.min_stock && newStock<item.min_stock){
+    notifyLowStock(item.name, newStock, item.min_stock);
+  }
+}
+async function notifyLowStock(itemName, stock, minStock){
+  try {
+    await fetch('https://bhfxfiirkryndorgykzc.supabase.co/functions/v1/notify-low-stock',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({itemName:itemName,stock:stock,minStock:minStock})
+    });
+  } catch(e) {
+    console.warn('通知送信エラー：',e);
+  }
 }
 function renderOrders(){
   var sf=document.getElementById('orderStatusFilter').value;
