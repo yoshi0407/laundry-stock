@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>在庫管理</title>
 
 <!-- PWA設定 -->
@@ -125,7 +125,8 @@
 
 <div class="header">
   <h1>🧺 在庫管理</h1>
-  <div style="display:flex;align-items:center;">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button id="reloadBtn" onclick="manualReload()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:16px;width:30px;height:30px;border-radius:50%;cursor:pointer;display:none;">↻</button>
     <span class="status-dot" id="statusDot"></span>
     <span class="sync-label" id="syncLabel">未接続</span>
   </div>
@@ -161,6 +162,7 @@
   <div class="tabs">
     <div class="tab active" id="tab-stock" onclick="switchTab('stock')">在庫一覧</div>
     <div class="tab" id="tab-orders" onclick="switchTab('orders')">発注管理</div>
+    <div class="tab" id="tab-settings" onclick="switchTab('settings')">設定</div>
   </div>
   <div class="page active" id="page-stock">
     <div class="filters">
@@ -172,6 +174,9 @@
         <option value="low">残量少</option>
         <option value="ok">十分</option>
       </select>
+    </div>
+    <div id="bulkOrderBar" style="display:none;margin-bottom:10px;">
+      <button onclick="bulkOrder()" style="width:100%;padding:11px;background:#E53E3E;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;">⚠️ 不足品目をまとめて発注登録</button>
     </div>
     <div id="itemList"><div class="loading">読み込み中...</div></div>
     <div style="height:80px;"></div>
@@ -186,6 +191,26 @@
       </select>
     </div>
     <div id="orderList"><div class="loading">読み込み中...</div></div>
+    <div style="height:80px;"></div>
+  </div>
+  <div class="page" id="page-settings">
+    <div class="card" style="margin-top:4px;">
+      <div style="font-weight:500;margin-bottom:12px;">🔔 通知設定</div>
+      <div class="form-group">
+        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;">通知先メールアドレス</label>
+        <input type="email" id="notifyEmail" placeholder="例：your@email.com" style="width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;font-size:16px;color:var(--text);background:var(--card);">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button onclick="saveNotifyEmail()" style="flex:1;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;">保存</button>
+        <button onclick="sendTestEmail()" style="flex:1;padding:11px;background:var(--bg);color:var(--text);border:0.5px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;">テスト送信</button>
+      </div>
+      <p style="font-size:12px;color:var(--text2);margin-top:10px;line-height:1.6;">在庫不足・発注登録時にこのアドレスへメールが届きます。アプリを開いている場合はブラウザ通知も表示されます。</p>
+    </div>
+    <div class="card" style="margin-top:8px;">
+      <div style="font-weight:500;margin-bottom:12px;">🔔 ブラウザ通知</div>
+      <button onclick="requestNotifyPermission()" id="notifyPermBtn" style="width:100%;padding:11px;background:var(--bg);color:var(--text);border:0.5px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;">通知を許可する</button>
+      <p id="notifyPermStatus" style="font-size:12px;color:var(--text2);margin-top:8px;"></p>
+    </div>
     <div style="height:80px;"></div>
   </div>
 </div>
@@ -286,6 +311,7 @@ function connect(url, key) {
     document.getElementById('setupBanner').style.display='none';
     document.getElementById('mainApp').style.display='block';
     document.getElementById('fabBtn').style.display='flex';
+    document.getElementById('reloadBtn').style.display='flex';
     hideErr();
     setStatus('','接続中...');
     loadAll();
@@ -354,6 +380,7 @@ function updateCategoryFilter() {
 }
 function getStatus(i){if(i.stock<=0)return'out';if(i.stock<i.min_stock)return'low';return'ok';}
 function renderItems() {
+  updateBulkOrderBar();
   var search=document.getElementById('searchInput').value.toLowerCase();
   var cat=document.getElementById('categoryFilter').value;
   var st=document.getElementById('statusFilter').value;
@@ -398,16 +425,74 @@ async function changeStock(id,delta){
     notifyLowStock(item.name, newStock, item.min_stock);
   }
 }
-async function notifyLowStock(itemName, stock, minStock){
+function getNotifyEmail(){
+  return localStorage.getItem('notify_email') || 'yoshi.0723.0407@gmail.com';
+}
+function saveNotifyEmail(){
+  var v = document.getElementById('notifyEmail').value.trim();
+  if(!v){alert('メールアドレスを入力してください');return;}
+  localStorage.setItem('notify_email', v);
+  alert('保存しました');
+}
+async function sendTestEmail(){
+  var email = getNotifyEmail();
+  if(!email){alert('先にメールアドレスを保存してください');return;}
+  await callNotifyFunction({type:'test', to:email, itemName:'テスト品目', stock:0, minStock:5});
+  alert('テストメールを送信しました（'+email+'）');
+}
+async function callNotifyFunction(payload){
   try {
     await fetch('https://bhfxfiirkryndorgykzc.supabase.co/functions/v1/notify-low-stock',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({itemName:itemName,stock:stock,minStock:minStock})
+      body:JSON.stringify(payload)
     });
   } catch(e) {
     console.warn('通知送信エラー：',e);
   }
+}
+async function notifyLowStock(itemName, stock, minStock){
+  var email = getNotifyEmail();
+  showBrowserNotify('⚠️ 在庫不足：'+itemName, '残り'+stock+'　最低在庫：'+minStock);
+  await callNotifyFunction({to:email, itemName:itemName, stock:stock, minStock:minStock});
+}
+async function notifyNewOrder(itemName, qty){
+  var email = getNotifyEmail();
+  showBrowserNotify('📦 発注登録：'+itemName, '発注数：'+qty);
+  await callNotifyFunction({type:'order', to:email, itemName:itemName, stock:qty, minStock:0});
+}
+function showBrowserNotify(title, body){
+  if(Notification.permission === 'granted'){
+    new Notification(title, {body:body, icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgcng9IjQwIiBmaWxsPSIjMTg1RkE1Ii8+PHRleHQgeD0iOTYiIHk9IjEzMCIgZm9udC1zaXplPSIxMDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIj7wn6e6PC90ZXh0Pjwvc3ZnPg=='});
+  }
+}
+function requestNotifyPermission(){
+  Notification.requestPermission().then(function(p){
+    updateNotifyPermStatus();
+    if(p==='granted') showBrowserNotify('通知テスト','ブラウザ通知が有効になりました');
+  });
+}
+function updateNotifyPermStatus(){
+  var p = Notification.permission;
+  var btn = document.getElementById('notifyPermBtn');
+  var st = document.getElementById('notifyPermStatus');
+  if(p==='granted'){
+    btn.textContent='✅ 通知許可済み';
+    btn.style.background='var(--green-bg)';
+    btn.style.color='var(--green-text)';
+    st.textContent='ブラウザ通知が有効です。';
+  } else if(p==='denied'){
+    btn.textContent='🚫 通知がブロックされています';
+    btn.style.background='var(--red-bg)';
+    btn.style.color='var(--red-text)';
+    st.textContent='ブラウザの設定から通知を許可してください。';
+  } else {
+    btn.textContent='通知を許可する';
+    st.textContent='タップして通知を有効にしてください。';
+  }
+  // メールアドレスフィールドに現在の値をセット
+  var saved = localStorage.getItem('notify_email');
+  if(saved) document.getElementById('notifyEmail').value = saved;
 }
 function renderOrders(){
   var sf=document.getElementById('orderStatusFilter').value;
@@ -484,16 +569,40 @@ function openOrderModal(itemId,itemName){
 function closeOrderModal(){document.getElementById('orderModal').classList.remove('open');}
 async function submitOrder(){
   var itemId=document.getElementById('orderItemId').value;
+  var itemName=document.getElementById('orderItemName').textContent;
   var qty=parseInt(document.getElementById('orderQty').value)||1;
   await sb.from('orders').insert({item_id:itemId,quantity:qty,status:'pending'});
   closeOrderModal();
   switchTab('orders');
+  notifyNewOrder(itemName, qty);
+}
+async function manualReload(){
+  var btn=document.getElementById('reloadBtn');
+  btn.style.opacity='0.4';
+  await loadAll();
+  btn.style.opacity='1';
+}
+async function bulkOrder(){
+  var lowItems=items.filter(function(i){return getStatus(i)!=='ok';});
+  if(!lowItems.length){alert('不足している品目はありません');return;}
+  var names=lowItems.map(function(i){return i.name+'（残'+i.stock+i.unit+'）';}).join('\n');
+  if(!confirm('以下の品目を発注登録しますか？\n\n'+names))return;
+  var rows=lowItems.map(function(i){return{item_id:i.id,quantity:1,status:'pending'};});
+  var r=await sb.from('orders').insert(rows);
+  if(r.error){showErr('発注エラー：'+r.error.message);return;}
+  alert(lowItems.length+'件の発注を登録しました');
+  switchTab('orders');
+}
+function updateBulkOrderBar(){
+  var hasLow=items.some(function(i){return getStatus(i)!=='ok';});
+  document.getElementById('bulkOrderBar').style.display=hasLow?'block':'none';
 }
 function switchTab(tab){
-  document.getElementById('tab-stock').classList.toggle('active',tab==='stock');
-  document.getElementById('tab-orders').classList.toggle('active',tab==='orders');
-  document.getElementById('page-stock').classList.toggle('active',tab==='stock');
-  document.getElementById('page-orders').classList.toggle('active',tab==='orders');
+  ['stock','orders','settings'].forEach(function(t){
+    document.getElementById('tab-'+t).classList.toggle('active',tab===t);
+    document.getElementById('page-'+t).classList.toggle('active',tab===t);
+  });
+  if(tab==='settings') updateNotifyPermStatus();
 }
 
 // 起動
