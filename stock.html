@@ -387,7 +387,11 @@ function renderItems() {
 async function changeStock(id,delta){
   var item=items.find(function(i){return i.id===id;});
   if(!item)return;
-  await sb.from('items').update({stock:Math.max(0,item.stock+delta)}).eq('id',id);
+  var newStock=Math.max(0,item.stock+delta);
+  item.stock=newStock;
+  renderItems();
+  var r=await sb.from('items').update({stock:newStock}).eq('id',id);
+  if(r.error){showErr('更新エラー：'+r.error.message);}
 }
 function renderOrders(){
   var sf=document.getElementById('orderStatusFilter').value;
@@ -478,7 +482,19 @@ function switchTab(tab){
 
 // 起動
 setupPWA();
+
+// ★ Supabase接続情報（ここに直接入力）
+var SUPABASE_URL = 'https://bhfxfiirkryndorgykzc.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoZnhmaWlya3J5bmRvcmd5a3pjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxOTI3MzQsImV4cCI6MjA5MTc2ODczNH0.3qXRed5-keTHDvXVXjSrErq1tqzZxz2x9x4KnNG-OPw';
+
 window.addEventListener('load',function(){
+  // ハードコードされたキーがあれば優先して自動接続
+  if(SUPABASE_URL && SUPABASE_KEY){
+    document.getElementById('setupBanner').style.display='none';
+    connect(SUPABASE_URL, SUPABASE_KEY);
+    return;
+  }
+  // フォールバック：localStorageに保存済みのキーで接続
   var url=localStorage.getItem('sb_url');
   var key=localStorage.getItem('sb_key');
   if(url&&key){
