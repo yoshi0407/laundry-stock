@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>在庫管理</title>
-<!-- PWA設定 -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="在庫管理">
@@ -72,12 +71,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-ser
 .btn-status.to-ordered { background: var(--amber-bg); color: var(--amber-text); }
 .btn-status.to-received { background: var(--green-bg); color: var(--green-text); }
 .btn-del-order { padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; border: none; background: var(--red-bg); color: var(--red-text); }
-/* ★ 発注管理サブタブ */
 .sub-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
 .sub-tab { flex: 1; padding: 8px; text-align: center; font-size: 13px; cursor: pointer; color: var(--text2); background: var(--bg); border: 0.5px solid var(--border); border-radius: 8px; }
 .sub-tab.active { background: var(--blue-bg); color: var(--blue-text); border-color: var(--blue); font-weight: 500; }
-/* ★ 月次レポート */
-.monthly-report { }
 .month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .month-nav-btn { width: 36px; height: 36px; border-radius: 50%; border: 0.5px solid var(--border); background: var(--bg); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text); }
 .month-nav-title { font-size: 15px; font-weight: 500; color: var(--blue-text); }
@@ -85,7 +81,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-ser
 .kpi-card { flex: 1; background: var(--blue-bg); border-radius: var(--radius); padding: 10px 12px; text-align: center; }
 .kpi-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
 .kpi-value { font-size: 18px; font-weight: 600; color: var(--blue-text); }
-/* ★ 月別発注金額集計 */
 .monthly-summary { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
 .monthly-summary-title { font-size: 13px; font-weight: 500; color: var(--blue-text); margin-bottom: 10px; }
 .monthly-table { width: 100%; border-collapse: collapse; }
@@ -99,7 +94,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-ser
 .no-price-note { font-size: 11px; color: var(--text2); margin-top: 8px; }
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; padding: 20px; align-items: flex-end; justify-content: center; }
 .modal-overlay.open { display: flex; }
-.modal { background: var(--card); border-radius: 16px 16px 0 0; padding: 20px 16px calc(16px + var(--safe-bottom)); width: 100%; max-width: 480px; }
+.modal { background: var(--card); border-radius: 16px 16px 0 0; padding: 20px 16px calc(16px + var(--safe-bottom)); width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
 .modal h2 { font-size: 15px; font-weight: 500; margin-bottom: 14px; }
 .form-group { margin-bottom: 12px; }
 .form-group label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 4px; }
@@ -116,6 +111,24 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-ser
 .install-banner p { font-size: 13px; color: var(--blue-text); line-height: 1.5; }
 .install-banner button { padding: 6px 14px; background: var(--blue); color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; white-space: nowrap; }
 .install-banner .close-btn { background: none; color: var(--blue-text); padding: 4px; font-size: 16px; }
+/* 発注モーダル：単価ヒント・合計表示 */
+.unit-price-hint { font-size: 11px; color: var(--blue-text); margin-top: 5px; background: var(--blue-bg); padding: 4px 8px; border-radius: 4px; }
+.order-total-display { background: var(--blue-bg); border-radius: 8px; padding: 10px 14px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
+.order-total-label { font-size: 12px; color: var(--blue-text); }
+.order-total-value { font-size: 20px; font-weight: 700; color: var(--blue-text); }
+/* まとめて発注モーダル */
+.bulk-item-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+.bulk-item-row:last-child { border-bottom: none; }
+.bulk-item-info { flex: 1; min-width: 0; }
+.bulk-item-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bulk-item-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.bulk-qty-wrap { display: flex; align-items: center; gap: 4px; }
+.bulk-qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 0.5px solid var(--border); background: var(--bg); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; }
+.bulk-qty-input { width: 48px; text-align: center; padding: 4px 6px; border: 0.5px solid var(--border); border-radius: 6px; font-size: 15px; font-weight: 500; color: var(--text); background: var(--card); }
+.bulk-price-input { width: 80px; text-align: right; padding: 4px 6px; border: 0.5px solid var(--border); border-radius: 6px; font-size: 13px; color: var(--text); background: var(--card); }
+.bulk-total-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 0; margin-top: 4px; }
+.bulk-total-label { font-size: 12px; color: var(--text2); }
+.bulk-total-value { font-size: 16px; font-weight: 700; color: var(--blue-text); }
 </style>
 </head>
 <body>
@@ -169,7 +182,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-ser
       </select>
     </div>
     <div id="bulkOrderBar" style="display:none;margin-bottom:10px;">
-      <button onclick="bulkOrder()" style="width:100%;padding:11px;background:#E53E3E;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;">⚠️ 不足品目をまとめて発注登録</button>
+      <button onclick="openBulkOrderModal()" style="width:100%;padding:11px;background:#E53E3E;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;">⚠️ 不足品目をまとめて発注登録</button>
     </div>
     <div id="itemList"><div class="loading">読み込み中...</div></div>
     <div style="height:80px;"></div>
@@ -177,13 +190,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-ser
 
   <!-- 発注管理 -->
   <div class="page" id="page-orders">
-    <!-- ★ サブタブ -->
     <div class="sub-tabs">
       <div class="sub-tab active" id="subtab-list" onclick="switchOrderSubTab('list')">📋 発注一覧</div>
       <div class="sub-tab" id="subtab-report" onclick="switchOrderSubTab('report')">📅 月次レポート</div>
     </div>
-
-    <!-- 発注一覧パネル -->
     <div id="orderListPanel">
       <div class="filters">
         <select id="orderStatusFilter" onchange="renderOrders()">
@@ -193,7 +203,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-ser
           <option value="received">入荷済み</option>
         </select>
       </div>
-      <!-- 月別発注金額集計 -->
       <div id="monthlySummary" class="monthly-summary" style="display:none;">
         <div class="monthly-summary-title">📊 月別発注金額集計</div>
         <table class="monthly-table">
@@ -204,8 +213,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-ser
       </div>
       <div id="orderList"><div class="loading">読み込み中...</div></div>
     </div>
-
-    <!-- ★ 月次レポートパネル -->
     <div id="orderReportPanel" style="display:none;">
       <div class="month-nav">
         <button class="month-nav-btn" onclick="changeReportMonth(-1)">‹</button>
@@ -213,18 +220,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-ser
         <button class="month-nav-btn" onclick="changeReportMonth(1)">›</button>
       </div>
       <div class="monthly-kpi">
-        <div class="kpi-card">
-          <div class="kpi-label">発注件数</div>
-          <div class="kpi-value" id="reportCount">0件</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">合計金額</div>
-          <div class="kpi-value" id="reportTotal">—</div>
-        </div>
+        <div class="kpi-card"><div class="kpi-label">発注件数</div><div class="kpi-value" id="reportCount">0件</div></div>
+        <div class="kpi-card"><div class="kpi-label">合計金額</div><div class="kpi-value" id="reportTotal">—</div></div>
       </div>
       <div id="reportOrderList"></div>
     </div>
-
     <div style="height:80px;"></div>
   </div>
 
@@ -263,9 +263,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-ser
     <div class="form-group"><label>現在の在庫数</label><input type="number" id="fieldStock" value="0" min="0"></div>
     <div class="form-group"><label>最低在庫数（これを下回ると警告）</label><input type="number" id="fieldMinStock" value="5" min="0"></div>
     <div class="form-group"><label>単位</label><input type="text" id="fieldUnit" value="個" placeholder="本、枚、個、袋"></div>
-    <!-- ★ 単価欄追加 -->
     <div class="form-group">
-      <label>単価（円）<span style="font-size:11px;color:var(--text2);margin-left:4px;">任意・発注時に自動入力されます</span></label>
+      <label>単価（円）<span style="font-size:11px;color:var(--text2);margin-left:4px;">任意・発注時に数量×単価で自動計算されます</span></label>
       <input type="number" id="fieldPrice" min="0" placeholder="例：500">
     </div>
     <div class="modal-footer">
@@ -275,20 +274,46 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-ser
   </div>
 </div>
 
-<!-- 発注モーダル -->
+<!-- 発注モーダル（1品目） -->
 <div class="modal-overlay" id="orderModal">
   <div class="modal">
     <h2>発注を登録する</h2>
     <input type="hidden" id="orderItemId">
+    <input type="hidden" id="orderUnitPrice">
     <p id="orderItemName" style="font-weight:500;margin-bottom:12px;font-size:15px;"></p>
-    <div class="form-group"><label>発注数量</label><input type="number" id="orderQty" value="1" min="1"></div>
     <div class="form-group">
-      <label>金額（円）<span style="font-size:11px;color:var(--text2);margin-left:4px;">任意</span></label>
+      <label>発注数量</label>
+      <input type="number" id="orderQty" value="1" min="1" oninput="recalcOrderPrice()">
+    </div>
+    <div class="form-group">
+      <label>金額（円）<span style="font-size:11px;color:var(--text2);margin-left:4px;">任意・直接編集も可</span></label>
       <input type="number" id="orderPrice" min="0" placeholder="例：3500">
+      <p class="unit-price-hint" id="unitPriceHint" style="display:none;"></p>
+    </div>
+    <div class="order-total-display" id="orderTotalDisplay" style="display:none;">
+      <span class="order-total-label">💰 発注合計</span>
+      <span class="order-total-value" id="orderTotalValue"></span>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" id="closeOrderBtn">キャンセル</button>
       <button class="btn-save" id="submitOrderBtn">発注登録</button>
+    </div>
+  </div>
+</div>
+
+<!-- まとめて発注モーダル -->
+<div class="modal-overlay" id="bulkOrderModal">
+  <div class="modal">
+    <h2>⚠️ まとめて発注登録</h2>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">数量・金額を確認して登録してください</p>
+    <div id="bulkOrderList"></div>
+    <div class="bulk-total-row" id="bulkTotalRow" style="display:none;">
+      <span class="bulk-total-label">合計金額</span>
+      <span class="bulk-total-value" id="bulkTotalValue"></span>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="closeBulkOrderBtn">キャンセル</button>
+      <button class="btn-save" id="submitBulkOrderBtn">まとめて発注登録</button>
     </div>
   </div>
 </div>
@@ -301,9 +326,8 @@ var orders = [];
 var realtimeCh = null;
 var deferredPrompt = null;
 var currentOrderSubTab = 'list';
-// ★ 月次レポート用：現在表示中の年月（Date オブジェクトの年月部分）
 var reportYear = new Date().getFullYear();
-var reportMonth = new Date().getMonth(); // 0-indexed
+var reportMonth = new Date().getMonth();
 
 function setupPWA() {
   var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#185FA5"/><text x="96" y="130" font-size="100" text-anchor="middle" fill="white">🧺</text></svg>';
@@ -350,8 +374,11 @@ document.getElementById('closeItemBtn').addEventListener('click', closeItemModal
 document.getElementById('saveItemBtn').addEventListener('click', saveItem);
 document.getElementById('closeOrderBtn').addEventListener('click', closeOrderModal);
 document.getElementById('submitOrderBtn').addEventListener('click', submitOrder);
+document.getElementById('closeBulkOrderBtn').addEventListener('click', closeBulkOrderModal);
+document.getElementById('submitBulkOrderBtn').addEventListener('click', submitBulkOrder);
 document.getElementById('itemModal').addEventListener('click', function(e){ if(e.target===this)closeItemModal(); });
 document.getElementById('orderModal').addEventListener('click', function(e){ if(e.target===this)closeOrderModal(); });
+document.getElementById('bulkOrderModal').addEventListener('click', function(e){ if(e.target===this)closeBulkOrderModal(); });
 
 async function loadAll() { await Promise.all([loadItems(), loadOrders()]); setStatus('connected','同期済み'); }
 async function loadItems() {
@@ -422,7 +449,6 @@ async function changeStock(id,delta){
   if(prevStock>=item.min_stock && newStock<item.min_stock) notifyLowStock(item.name, newStock, item.min_stock);
 }
 
-// ★ 月次レポートサブタブ切り替え
 function switchOrderSubTab(tab) {
   currentOrderSubTab = tab;
   ['list','report'].forEach(function(t){
@@ -433,7 +459,6 @@ function switchOrderSubTab(tab) {
   if(tab==='report') renderMonthlyReport();
 }
 
-// ★ 月ナビ
 function changeReportMonth(delta) {
   reportMonth += delta;
   if(reportMonth > 11) { reportMonth = 0; reportYear++; }
@@ -441,11 +466,9 @@ function changeReportMonth(delta) {
   renderMonthlyReport();
 }
 
-// ★ 月次レポート描画
 function renderMonthlyReport() {
   var y = reportYear; var m = reportMonth;
-  var monthStr = y + '年' + (m+1) + '月';
-  document.getElementById('reportMonthTitle').textContent = monthStr;
+  document.getElementById('reportMonthTitle').textContent = y + '年' + (m+1) + '月';
   var filtered = orders.filter(function(o){
     var d = new Date(o.created_at);
     return d.getFullYear()===y && d.getMonth()===m;
@@ -472,7 +495,6 @@ function renderMonthlyReport() {
   }).join('');
 }
 
-// ★ 月別サマリー（発注一覧タブ上部）
 function renderMonthlySummary() {
   var monthMap = {}; var hasNoPriceOrder = false;
   orders.forEach(function(o) {
@@ -545,7 +567,7 @@ function openAddModal(){
   document.getElementById('fieldStock').value='0';
   document.getElementById('fieldMinStock').value='5';
   document.getElementById('fieldUnit').value='個';
-  document.getElementById('fieldPrice').value=''; // ★
+  document.getElementById('fieldPrice').value='';
   document.getElementById('itemModal').classList.add('open');
 }
 function openEditModal(id){
@@ -557,21 +579,21 @@ function openEditModal(id){
   document.getElementById('fieldStock').value=item.stock;
   document.getElementById('fieldMinStock').value=item.min_stock;
   document.getElementById('fieldUnit').value=item.unit;
-  document.getElementById('fieldPrice').value=(item.price!==null&&item.price!==undefined)?item.price:''; // ★
+  document.getElementById('fieldPrice').value=(item.price!==null&&item.price!==undefined)?item.price:'';
   document.getElementById('itemModal').classList.add('open');
 }
 function closeItemModal(){document.getElementById('itemModal').classList.remove('open');}
 
 async function saveItem(){
   var id=document.getElementById('editId').value;
-  var priceRaw=document.getElementById('fieldPrice').value.trim(); // ★
+  var priceRaw=document.getElementById('fieldPrice').value.trim();
   var data={
     name:document.getElementById('fieldName').value.trim(),
     category:document.getElementById('fieldCategory').value.trim(),
     stock:parseInt(document.getElementById('fieldStock').value)||0,
     min_stock:parseInt(document.getElementById('fieldMinStock').value)||0,
     unit:document.getElementById('fieldUnit').value.trim()||'個',
-    price:(priceRaw!==''&&parseInt(priceRaw)>=0)?parseInt(priceRaw):null // ★
+    price:(priceRaw!==''&&parseInt(priceRaw)>=0)?parseInt(priceRaw):null
   };
   if(!data.name||!data.category){alert('品名とカテゴリは必須です');return;}
   if(id){await sb.from('items').update(data).eq('id',id);}
@@ -584,50 +606,155 @@ async function deleteItem(id,name){
   await sb.from('items').delete().eq('id',id);
 }
 
-// ★ 発注モーダル：品目の単価を自動セット
-function openOrderModal(itemId,itemName){
-  document.getElementById('orderItemId').value=itemId;
-  document.getElementById('orderItemName').textContent=itemName;
-  document.getElementById('orderQty').value='1';
-  var item=items.find(function(i){return i.id===itemId;});
-  var autoPrice=(item&&item.price!==null&&item.price!==undefined&&item.price>0)?item.price:'';
-  document.getElementById('orderPrice').value=autoPrice;
+// ★ 発注モーダル：単価×数量で金額自動計算
+function openOrderModal(itemId, itemName){
+  document.getElementById('orderItemId').value = itemId;
+  document.getElementById('orderItemName').textContent = itemName;
+  document.getElementById('orderQty').value = '1';
+  var item = items.find(function(i){ return i.id === itemId; });
+  var unitPrice = (item && item.price !== null && item.price !== undefined && item.price > 0) ? item.price : 0;
+  document.getElementById('orderUnitPrice').value = unitPrice;
+  var hint = document.getElementById('unitPriceHint');
+  if(unitPrice > 0){
+    hint.textContent = '単価 ¥' + unitPrice.toLocaleString() + ' × 数量で自動計算されます';
+    hint.style.display = 'block';
+  } else {
+    hint.style.display = 'none';
+  }
+  document.getElementById('orderPrice').value = unitPrice > 0 ? unitPrice : '';
+  recalcOrderPrice();
   document.getElementById('orderModal').classList.add('open');
 }
-function closeOrderModal(){document.getElementById('orderModal').classList.remove('open');}
+
+function recalcOrderPrice(){
+  var unitPrice = parseInt(document.getElementById('orderUnitPrice').value) || 0;
+  var qty = parseInt(document.getElementById('orderQty').value) || 1;
+  var totalDisplay = document.getElementById('orderTotalDisplay');
+  var totalValue = document.getElementById('orderTotalValue');
+  if(unitPrice > 0){
+    var total = unitPrice * qty;
+    document.getElementById('orderPrice').value = total;
+    totalValue.textContent = '¥' + total.toLocaleString();
+    totalDisplay.style.display = 'flex';
+  } else {
+    totalDisplay.style.display = 'none';
+  }
+}
+
+function closeOrderModal(){ document.getElementById('orderModal').classList.remove('open'); }
 
 async function submitOrder(){
-  var itemId=document.getElementById('orderItemId').value;
-  var itemName=document.getElementById('orderItemName').textContent;
-  var qty=parseInt(document.getElementById('orderQty').value)||1;
-  var priceRaw=document.getElementById('orderPrice').value.trim();
-  var price=(priceRaw!==''&&parseInt(priceRaw)>0)?parseInt(priceRaw):null;
-  var insertData={item_id:itemId, quantity:qty, status:'pending'};
-  if(price!==null) insertData.price=price;
-  var r=await sb.from('orders').insert(insertData).select('*, items(name,unit,price)');
+  var itemId = document.getElementById('orderItemId').value;
+  var itemName = document.getElementById('orderItemName').textContent;
+  var qty = parseInt(document.getElementById('orderQty').value) || 1;
+  var priceRaw = document.getElementById('orderPrice').value.trim();
+  var price = (priceRaw !== '' && parseInt(priceRaw) > 0) ? parseInt(priceRaw) : null;
+  var insertData = {item_id: itemId, quantity: qty, status: 'pending'};
+  if(price !== null) insertData.price = price;
+  var r = await sb.from('orders').insert(insertData).select('*, items(name,unit,price)');
   if(r.error){showErr('発注エラー：'+r.error.message);return;}
-  if(r.data&&r.data.length>0) orders.unshift(r.data[0]);
+  if(r.data && r.data.length > 0) orders.unshift(r.data[0]);
   closeOrderModal();
-  switchTab('orders');
+  // ★ 発注後は在庫一覧に戻る
+  switchTab('stock');
   notifyNewOrder(itemName, qty);
+}
+
+// ★ まとめて発注モーダルを開く
+function openBulkOrderModal(){
+  var lowItems = items.filter(function(i){ return getStatus(i) !== 'ok'; });
+  if(!lowItems.length){ alert('不足している品目はありません'); return; }
+
+  var html = lowItems.map(function(item, idx){
+    var unitPrice = (item.price !== null && item.price !== undefined && item.price > 0) ? item.price : 0;
+    var initPrice = unitPrice > 0 ? unitPrice : '';
+    return '<div class="bulk-item-row" id="bulk-row-'+idx+'">'
+      +'<div class="bulk-item-info">'
+      +'<div class="bulk-item-name">'+esc(item.name)+'</div>'
+      +'<div class="bulk-item-sub">残'+item.stock+esc(item.unit)+' 最低'+item.min_stock+esc(item.unit)
+        +(unitPrice>0?' 単価¥'+unitPrice.toLocaleString():'')+'</div>'
+      +'</div>'
+      +'<div class="bulk-qty-wrap">'
+      +'<button class="bulk-qty-btn" onclick="changeBulkQty('+idx+',-1)">－</button>'
+      +'<input class="bulk-qty-input" type="number" id="bulk-qty-'+idx+'" value="1" min="1"'
+        +' data-unit-price="'+unitPrice+'" data-item-id="'+esc(item.id)+'"'
+        +' oninput="recalcBulkRow('+idx+')">'
+      +'<button class="bulk-qty-btn" onclick="changeBulkQty('+idx+',1)">＋</button>'
+      +'</div>'
+      +'<input class="bulk-price-input" type="number" id="bulk-price-'+idx+'" value="'+initPrice+'" min="0" placeholder="金額"'
+        +' oninput="recalcBulkTotal()">'
+    +'</div>';
+  }).join('');
+
+  document.getElementById('bulkOrderList').innerHTML = html;
+  recalcBulkTotal();
+  document.getElementById('bulkOrderModal').classList.add('open');
+}
+
+function changeBulkQty(idx, delta){
+  var input = document.getElementById('bulk-qty-'+idx);
+  var newVal = Math.max(1, (parseInt(input.value)||1) + delta);
+  input.value = newVal;
+  recalcBulkRow(idx);
+}
+
+function recalcBulkRow(idx){
+  var qtyInput = document.getElementById('bulk-qty-'+idx);
+  var priceInput = document.getElementById('bulk-price-'+idx);
+  var unitPrice = parseInt(qtyInput.getAttribute('data-unit-price')) || 0;
+  var qty = parseInt(qtyInput.value) || 1;
+  if(unitPrice > 0){
+    priceInput.value = unitPrice * qty;
+  }
+  recalcBulkTotal();
+}
+
+function recalcBulkTotal(){
+  var lowItems = items.filter(function(i){ return getStatus(i) !== 'ok'; });
+  var total = 0;
+  var hasPrice = false;
+  lowItems.forEach(function(_, idx){
+    var p = parseInt(document.getElementById('bulk-price-'+idx) && document.getElementById('bulk-price-'+idx).value) || 0;
+    if(p > 0){ total += p; hasPrice = true; }
+  });
+  var totalRow = document.getElementById('bulkTotalRow');
+  if(hasPrice){
+    document.getElementById('bulkTotalValue').textContent = '¥' + total.toLocaleString();
+    totalRow.style.display = 'flex';
+  } else {
+    totalRow.style.display = 'none';
+  }
+}
+
+function closeBulkOrderModal(){ document.getElementById('bulkOrderModal').classList.remove('open'); }
+
+async function submitBulkOrder(){
+  var lowItems = items.filter(function(i){ return getStatus(i) !== 'ok'; });
+  if(!lowItems.length){ closeBulkOrderModal(); return; }
+
+  var rows = lowItems.map(function(item, idx){
+    var qty = parseInt(document.getElementById('bulk-qty-'+idx) && document.getElementById('bulk-qty-'+idx).value) || 1;
+    var priceRaw = document.getElementById('bulk-price-'+idx) ? document.getElementById('bulk-price-'+idx).value.trim() : '';
+    var price = (priceRaw !== '' && parseInt(priceRaw) > 0) ? parseInt(priceRaw) : null;
+    var row = {item_id: item.id, quantity: qty, status: 'pending'};
+    if(price !== null) row.price = price;
+    return row;
+  });
+
+  var r = await sb.from('orders').insert(rows).select('*, items(name,unit,price)');
+  if(r.error){ showErr('発注エラー：'+r.error.message); return; }
+  if(r.data && r.data.length > 0){
+    r.data.reverse().forEach(function(o){ orders.unshift(o); });
+  }
+  closeBulkOrderModal();
+  // ★ まとめて発注後も在庫一覧に戻る
+  switchTab('stock');
+  renderOrders();
 }
 
 async function manualReload(){
   var btn=document.getElementById('reloadBtn'); btn.style.opacity='0.4';
   await loadAll(); btn.style.opacity='1';
-}
-
-async function bulkOrder(){
-  var lowItems=items.filter(function(i){return getStatus(i)!=='ok';});
-  if(!lowItems.length){alert('不足している品目はありません');return;}
-  var names=lowItems.map(function(i){return i.name+'（残'+i.stock+i.unit+'）';}).join('\n');
-  if(!confirm('以下の品目を発注登録しますか？\n\n'+names))return;
-  var rows=lowItems.map(function(i){return{item_id:i.id,quantity:1,status:'pending'};});
-  var r=await sb.from('orders').insert(rows).select('*, items(name,unit,price)');
-  if(r.error){showErr('発注エラー：'+r.error.message);return;}
-  if(r.data&&r.data.length>0){ r.data.reverse().forEach(function(o){orders.unshift(o);}); }
-  alert(lowItems.length+'件の発注を登録しました');
-  switchTab('orders');
 }
 
 function updateBulkOrderBar(){
