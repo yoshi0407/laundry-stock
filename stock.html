@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>在庫管理</title>
+
+<!-- PWA設定 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="在庫管理">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#185FA5">
+<link rel="manifest" id="manifestLink">
+
+<!-- ホーム画面アイコン（iOSとAndroid両対応） -->
+<link rel="apple-touch-icon" id="appleIcon">
+
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --card: #ffffff;
+    --border: rgba(0,0,0,0.12);
+    --text: #1a1a1a;
+    --text2: #666;
+    --blue: #185FA5;
+    --blue-bg: #E6F1FB;
+    --blue-text: #0C447C;
+    --green-bg: #EAF3DE;
+    --green-text: #27500A;
+    --amber: #854F0B;
+    --amber-bg: #FAEEDA;
+    --amber-text: #633806;
+    --red-bg: #FCEBEB;
+    --red-text: #791F1F;
+    --radius: 10px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
+
+  .header { background: var(--blue); color: #fff; padding: 12px 16px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; }
+  .header h1 { font-size: 16px; font-weight: 500; color: #fff; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); display: inline-block; margin-right: 6px; }
+  .status-dot.connected { background: #9FE1CB; }
+  .status-dot.error { background: #F09595; }
+  .sync-label { font-size: 11px; color: rgba(255,255,255,0.8); }
+
+  .setup-banner { background: var(--amber-bg); border: 0.5px solid #FAC775; padding: 16px; margin: 12px; border-radius: var(--radius); }
+  .setup-banner h2 { font-size: 14px; font-weight: 500; color: var(--amber-text); margin-bottom: 10px; }
+  .setup-banner label { display: block; font-size: 12px; color: var(--amber-text); margin-bottom: 3px; margin-top: 10px; }
+  .setup-banner input { width: 100%; padding: 8px 10px; border: 0.5px solid #EF9F27; border-radius: 6px; font-size: 13px; background: #fff; color: #1a1a1a; }
+  .setup-btn { margin-top: 12px; width: 100%; padding: 10px; background: var(--amber); color: #fff; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
+  .setup-note { font-size: 12px; color: var(--amber-text); margin-top: 10px; line-height: 1.7; }
+
+  .tabs { display: flex; background: var(--card); border-bottom: 0.5px solid var(--border); }
+  .tab { flex: 1; padding: 10px; text-align: center; font-size: 13px; cursor: pointer; color: var(--text2); border-bottom: 2px solid transparent; }
+  .tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 500; }
+
+  .page { display: none; padding: 12px; }
+  .page.active { display: block; }
+
+  .filters { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .filters input, .filters select { flex: 1; min-width: 120px; padding: 7px 10px; border: 0.5px solid var(--border); border-radius: 6px; font-size: 13px; background: var(--card); color: var(--text); }
+
+  .card { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 8px; }
+  .item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .item-name { font-weight: 500; font-size: 14px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .badge.ok { background: var(--green-bg); color: var(--green-text); }
+  .badge.low { background: var(--amber-bg); color: var(--amber-text); }
+  .badge.out { background: var(--red-bg); color: var(--red-text); }
+  .badge.pending { background: var(--blue-bg); color: var(--blue-text); }
+  .badge.ordered { background: var(--amber-bg); color: var(--amber-text); }
+  .badge.received { background: var(--green-bg); color: var(--green-text); }
+
+  .item-meta { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+  .stock-row { display: flex; align-items: center; gap: 8px; }
+  .btn-round { width: 34px; height: 34px; border-radius: 50%; border: 0.5px solid var(--border); background: var(--bg); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text); }
+  .stock-num { font-size: 22px; font-weight: 500; min-width: 40px; text-align: center; }
+  .unit-label { font-size: 12px; color: var(--text2); }
+  .action-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .btn-sm { padding: 6px 12px; border: 0.5px solid var(--border); border-radius: 6px; font-size: 12px; cursor: pointer; background: var(--bg); color: var(--text); }
+  .btn-sm.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .btn-sm.danger { color: var(--red-text); border-color: #F7C1C1; }
+
+  .fab { position: fixed; bottom: calc(24px + var(--safe-bottom)); right: 20px; width: 54px; height: 54px; border-radius: 50%; background: var(--blue); color: #fff; border: none; font-size: 28px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 3px 12px rgba(24,95,165,0.4); z-index: 50; }
+
+  .order-card { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 8px; }
+  .order-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .order-name { font-weight: 500; }
+  .order-qty { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+  .order-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn-status { padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; border: none; }
+  .btn-status.to-ordered { background: var(--amber-bg); color: var(--amber-text); }
+  .btn-status.to-received { background: var(--green-bg); color: var(--green-text); }
+  .btn-del-order { padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; border: none; background: var(--red-bg); color: var(--red-text); }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; padding: 20px; align-items: flex-end; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--card); border-radius: 16px 16px 0 0; padding: 20px 16px calc(16px + var(--safe-bottom)); width: 100%; max-width: 480px; }
+  .modal h2 { font-size: 15px; font-weight: 500; margin-bottom: 14px; }
+  .form-group { margin-bottom: 12px; }
+  .form-group label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .form-group input { width: 100%; padding: 10px 12px; border: 0.5px solid var(--border); border-radius: 8px; font-size: 16px; color: var(--text); background: var(--card); }
+  .modal-footer { display: flex; gap: 8px; margin-top: 16px; }
+  .modal-footer button { flex: 1; padding: 12px; border-radius: 8px; font-size: 15px; cursor: pointer; border: none; }
+  .btn-cancel { background: var(--bg); color: var(--text); border: 0.5px solid var(--border) !important; }
+  .btn-save { background: var(--blue); color: #fff; font-weight: 500; }
+
+  .empty { text-align: center; padding: 40px 20px; color: var(--text2); font-size: 13px; }
+  .loading { text-align: center; padding: 40px 20px; color: var(--text2); }
+  .err-box { background: var(--red-bg); color: var(--red-text); padding: 10px 14px; border-radius: 6px; font-size: 13px; margin: 0 12px 8px; display: none; }
+
+  /* PWAインストール促進バナー */
+  .install-banner { background: var(--blue-bg); border: 0.5px solid #B5D4F4; padding: 12px 16px; margin: 12px; border-radius: var(--radius); display: none; }
+  .install-banner-inner { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .install-banner p { font-size: 13px; color: var(--blue-text); line-height: 1.5; }
+  .install-banner button { padding: 6px 14px; background: var(--blue); color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .install-banner .close-btn { background: none; color: var(--blue-text); padding: 4px; font-size: 16px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🧺 在庫管理</h1>
+  <div style="display:flex;align-items:center;">
+    <span class="status-dot" id="statusDot"></span>
+    <span class="sync-label" id="syncLabel">未接続</span>
+  </div>
+</div>
+
+<!-- PWAインストール促進（Android Chrome用） -->
+<div class="install-banner" id="installBanner">
+  <div class="install-banner-inner">
+    <p>ホーム画面に追加するとアプリのように使えます</p>
+    <button id="installBtn">追加する</button>
+    <button class="close-btn" id="closeBanner">✕</button>
+  </div>
+</div>
+
+<div class="setup-banner" id="setupBanner">
+  <h2>⚙️ 初回設定：Supabase接続キーを入力</h2>
+  <label>Project URL</label>
+  <input type="text" id="inputUrl" placeholder="https://【プロジェクトID】.supabase.co">
+  <label>anon キー（または Publishable キー）</label>
+  <input type="text" id="inputKey" placeholder="eyJ... または sb_publishable_...">
+  <button class="setup-btn" id="connectBtn">接続して保存</button>
+  <p class="setup-note">
+    【URLの作り方】Data API のプロジェクトIDを使って<br>
+    https://プロジェクトID.supabase.co<br><br>
+    【キーの場所】Project Settings → API Keys<br>
+    「Legacy API Keys」タブ → anon の値をコピー
+  </p>
+</div>
+
+<div class="err-box" id="errBox"></div>
+
+<div id="mainApp" style="display:none;">
+  <div class="tabs">
+    <div class="tab active" id="tab-stock" onclick="switchTab('stock')">在庫一覧</div>
+    <div class="tab" id="tab-orders" onclick="switchTab('orders')">発注管理</div>
+  </div>
+  <div class="page active" id="page-stock">
+    <div class="filters">
+      <input type="text" id="searchInput" placeholder="品名で検索..." oninput="renderItems()">
+      <select id="categoryFilter" onchange="renderItems()"><option value="">全カテゴリ</option></select>
+      <select id="statusFilter" onchange="renderItems()">
+        <option value="">全状態</option>
+        <option value="out">在庫切れ</option>
+        <option value="low">残量少</option>
+        <option value="ok">十分</option>
+      </select>
+    </div>
+    <div id="itemList"><div class="loading">読み込み中...</div></div>
+    <div style="height:80px;"></div>
+  </div>
+  <div class="page" id="page-orders">
+    <div class="filters">
+      <select id="orderStatusFilter" onchange="renderOrders()">
+        <option value="">全ステータス</option>
+        <option value="pending">発注待ち</option>
+        <option value="ordered">発注済み</option>
+        <option value="received">入荷済み</option>
+      </select>
+    </div>
+    <div id="orderList"><div class="loading">読み込み中...</div></div>
+    <div style="height:80px;"></div>
+  </div>
+</div>
+
+<button class="fab" id="fabBtn">＋</button>
+
+<div class="modal-overlay" id="itemModal">
+  <div class="modal">
+    <h2 id="modalTitle">品目を追加</h2>
+    <input type="hidden" id="editId">
+    <div class="form-group"><label>品名 *</label><input type="text" id="fieldName" placeholder="例：洗剤A（業務用）"></div>
+    <div class="form-group"><label>カテゴリ *</label><input type="text" id="fieldCategory" placeholder="例：洗剤、ハンガー"></div>
+    <div class="form-group"><label>現在の在庫数</label><input type="number" id="fieldStock" value="0" min="0"></div>
+    <div class="form-group"><label>最低在庫数（これを下回ると警告）</label><input type="number" id="fieldMinStock" value="5" min="0"></div>
+    <div class="form-group"><label>単位</label><input type="text" id="fieldUnit" value="個" placeholder="本、枚、個、袋"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="closeItemBtn">キャンセル</button>
+      <button class="btn-save" id="saveItemBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="orderModal">
+  <div class="modal">
+    <h2>発注を登録する</h2>
+    <input type="hidden" id="orderItemId">
+    <p id="orderItemName" style="font-weight:500;margin-bottom:12px;font-size:15px;"></p>
+    <div class="form-group"><label>発注数量</label><input type="number" id="orderQty" value="1" min="1"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="closeOrderBtn">キャンセル</button>
+      <button class="btn-save" id="submitOrderBtn">発注登録</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var sb = null;
+var items = [];
+var orders = [];
+var realtimeCh = null;
+var deferredPrompt = null;
+
+// --- PWA: manifest と アイコンをJSで動的生成（1ファイルで完結させるため）---
+function setupPWA() {
+  // SVGアイコンをbase64で生成（青背景に洗濯機マーク）
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#185FA5"/><text x="96" y="130" font-size="100" text-anchor="middle" fill="white">🧺</text></svg>';
+  var iconUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+
+  // apple-touch-icon
+  document.getElementById('appleIcon').href = iconUrl;
+
+  // manifest.json をBlobで生成してリンク
+  var manifest = {
+    name: '洗濯工場 在庫管理',
+    short_name: '在庫管理',
+    start_url: location.href,
+    display: 'standalone',
+    background_color: '#185FA5',
+    theme_color: '#185FA5',
+    lang: 'ja',
+    icons: [
+      { src: iconUrl, sizes: '192x192', type: 'image/svg+xml' },
+      { src: iconUrl, sizes: '512x512', type: 'image/svg+xml' }
+    ]
+  };
+  var blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+  document.getElementById('manifestLink').href = URL.createObjectURL(blob);
+}
+
+// Android Chrome: インストールプロンプト
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!localStorage.getItem('pwa_banner_closed')) {
+    document.getElementById('installBanner').style.display = 'block';
+  }
+});
+window.addEventListener('appinstalled', function() {
+  document.getElementById('installBanner').style.display = 'none';
+});
+
+// --- ユーティリティ ---
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function showErr(msg) { var e=document.getElementById('errBox'); e.textContent=msg; e.style.display='block'; }
+function hideErr() { document.getElementById('errBox').style.display='none'; }
+function setStatus(cls, label) {
+  var d=document.getElementById('statusDot');
+  d.className='status-dot'+(cls?' '+cls:'');
+  document.getElementById('syncLabel').textContent=label;
+}
+
+function connect(url, key) {
+  try {
+    sb = window.supabase.createClient(url, key);
+    document.getElementById('setupBanner').style.display='none';
+    document.getElementById('mainApp').style.display='block';
+    document.getElementById('fabBtn').style.display='flex';
+    hideErr();
+    setStatus('','接続中...');
+    loadAll();
+    subscribeRealtime();
+  } catch(e) {
+    showErr('接続エラー：'+e.message);
+  }
+}
+
+// --- イベント設定 ---
+document.getElementById('connectBtn').addEventListener('click', function(){
+  var url=document.getElementById('inputUrl').value.trim();
+  var key=document.getElementById('inputKey').value.trim();
+  if(!url||!key){showErr('URLとキーを両方入力してください');return;}
+  if(!url.startsWith('https://')){showErr('URLは https:// から始まる形式で入力してください');return;}
+  localStorage.setItem('sb_url',url);
+  localStorage.setItem('sb_key',key);
+  connect(url,key);
+});
+document.getElementById('installBtn').addEventListener('click', function(){
+  if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null;}
+});
+document.getElementById('closeBanner').addEventListener('click', function(){
+  document.getElementById('installBanner').style.display='none';
+  localStorage.setItem('pwa_banner_closed','1');
+});
+document.getElementById('fabBtn').addEventListener('click', openAddModal);
+document.getElementById('closeItemBtn').addEventListener('click', closeItemModal);
+document.getElementById('saveItemBtn').addEventListener('click', saveItem);
+document.getElementById('closeOrderBtn').addEventListener('click', closeOrderModal);
+document.getElementById('submitOrderBtn').addEventListener('click', submitOrder);
+
+// モーダル背景クリックで閉じる
+document.getElementById('itemModal').addEventListener('click', function(e){ if(e.target===this)closeItemModal(); });
+document.getElementById('orderModal').addEventListener('click', function(e){ if(e.target===this)closeOrderModal(); });
+
+// --- データ操作 ---
+async function loadAll() {
+  await Promise.all([loadItems(), loadOrders()]);
+  setStatus('connected','同期済み');
+}
+async function loadItems() {
+  var r=await sb.from('items').select('*').order('category').order('name');
+  if(r.error){setStatus('error','エラー');showErr('取得エラー：'+r.error.message);return;}
+  items=r.data; updateCategoryFilter(); renderItems();
+}
+async function loadOrders() {
+  var r=await sb.from('orders').select('*, items(name,unit)').order('created_at',{ascending:false});
+  if(r.error)return;
+  orders=r.data; renderOrders();
+}
+function subscribeRealtime() {
+  if(realtimeCh) sb.removeChannel(realtimeCh);
+  realtimeCh=sb.channel('stock-sync')
+    .on('postgres_changes',{event:'*',schema:'public',table:'items'},function(){loadItems();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'orders'},function(){loadOrders();})
+    .subscribe(function(s){if(s==='SUBSCRIBED')setStatus('connected','リアルタイム同期中');});
+}
+function updateCategoryFilter() {
+  var cats=[...new Set(items.map(function(i){return i.category;}))].sort();
+  var sel=document.getElementById('categoryFilter');
+  var cur=sel.value;
+  sel.innerHTML='<option value="">全カテゴリ</option>'+cats.map(function(c){
+    return '<option value="'+esc(c)+'"'+(c===cur?' selected':'')+'>'+esc(c)+'</option>';
+  }).join('');
+}
+function getStatus(i){if(i.stock<=0)return'out';if(i.stock<i.min_stock)return'low';return'ok';}
+function renderItems() {
+  var search=document.getElementById('searchInput').value.toLowerCase();
+  var cat=document.getElementById('categoryFilter').value;
+  var st=document.getElementById('statusFilter').value;
+  var f=items.filter(function(i){
+    if(search&&i.name.toLowerCase().indexOf(search)===-1)return false;
+    if(cat&&i.category!==cat)return false;
+    if(st&&getStatus(i)!==st)return false;
+    return true;
+  });
+  var el=document.getElementById('itemList');
+  if(!f.length){el.innerHTML='<div class="empty">該当する品目がありません</div>';return;}
+  var lb={ok:'十分',low:'残量少',out:'在庫切れ'};
+  el.innerHTML=f.map(function(item){
+    var s=getStatus(item);
+    return '<div class="card">'
+      +'<div class="item-header"><span class="item-name">'+esc(item.name)+'</span><span class="badge '+s+'">'+lb[s]+'</span></div>'
+      +'<div class="item-meta">'+esc(item.category)+'　最低在庫：'+item.min_stock+esc(item.unit)+'</div>'
+      +'<div class="stock-row">'
+      +'<button class="btn-round" onclick="changeStock(\''+item.id+'\',-1)">－</button>'
+      +'<span class="stock-num">'+item.stock+'</span>'
+      +'<button class="btn-round" onclick="changeStock(\''+item.id+'\',1)">＋</button>'
+      +'<span class="unit-label">'+esc(item.unit)+'</span>'
+      +'</div>'
+      +'<div class="action-row">'
+      +'<button class="btn-sm primary" onclick="openOrderModal(\''+item.id+'\',\''+esc(item.name)+'\')">発注登録</button>'
+      +'<button class="btn-sm" onclick="openEditModal(\''+item.id+'\')">編集</button>'
+      +'<button class="btn-sm danger" onclick="deleteItem(\''+item.id+'\',\''+esc(item.name)+'\')">削除</button>'
+      +'</div></div>';
+  }).join('');
+}
+async function changeStock(id,delta){
+  var item=items.find(function(i){return i.id===id;});
+  if(!item)return;
+  await sb.from('items').update({stock:Math.max(0,item.stock+delta)}).eq('id',id);
+}
+function renderOrders(){
+  var sf=document.getElementById('orderStatusFilter').value;
+  var f=orders.filter(function(o){return!sf||o.status===sf;});
+  var el=document.getElementById('orderList');
+  if(!f.length){el.innerHTML='<div class="empty">発注記録がありません</div>';return;}
+  var sm={pending:'発注待ち',ordered:'発注済み',received:'入荷済み'};
+  el.innerHTML=f.map(function(o){
+    var nm=o.items?o.items.name:'（削除済み）';
+    var un=o.items?o.items.unit:'';
+    var dt=new Date(o.created_at).toLocaleDateString('ja-JP');
+    var ac='';
+    if(o.status==='pending')ac+='<button class="btn-status to-ordered" onclick="updateOrderStatus(\''+o.id+'\',\'ordered\')">発注済みにする</button>';
+    if(o.status==='ordered')ac+='<button class="btn-status to-received" onclick="receiveOrder(\''+o.id+'\',\''+o.item_id+'\','+o.quantity+')">入荷済みにする</button>';
+    ac+='<button class="btn-del-order" onclick="deleteOrder(\''+o.id+'\')">削除</button>';
+    return '<div class="order-card">'
+      +'<div class="order-header"><span class="order-name">'+esc(nm)+'</span><span class="badge '+o.status+'">'+sm[o.status]+'</span></div>'
+      +'<div class="order-qty">発注数：'+o.quantity+esc(un)+'　登録日：'+dt+'</div>'
+      +'<div class="order-actions">'+ac+'</div></div>';
+  }).join('');
+}
+async function updateOrderStatus(id,status){await sb.from('orders').update({status:status,updated_at:new Date().toISOString()}).eq('id',id);}
+async function receiveOrder(orderId,itemId,qty){
+  await sb.from('orders').update({status:'received',updated_at:new Date().toISOString()}).eq('id',orderId);
+  var item=items.find(function(i){return i.id===itemId;});
+  if(item)await sb.from('items').update({stock:item.stock+qty}).eq('id',itemId);
+}
+async function deleteOrder(id){if(!confirm('この発注記録を削除しますか？'))return;await sb.from('orders').delete().eq('id',id);}
+function openAddModal(){
+  document.getElementById('modalTitle').textContent='品目を追加';
+  document.getElementById('editId').value='';
+  ['fieldName','fieldCategory'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('fieldStock').value='0';
+  document.getElementById('fieldMinStock').value='5';
+  document.getElementById('fieldUnit').value='個';
+  document.getElementById('itemModal').classList.add('open');
+}
+function openEditModal(id){
+  var item=items.find(function(i){return i.id===id;});if(!item)return;
+  document.getElementById('modalTitle').textContent='品目を編集';
+  document.getElementById('editId').value=id;
+  document.getElementById('fieldName').value=item.name;
+  document.getElementById('fieldCategory').value=item.category;
+  document.getElementById('fieldStock').value=item.stock;
+  document.getElementById('fieldMinStock').value=item.min_stock;
+  document.getElementById('fieldUnit').value=item.unit;
+  document.getElementById('itemModal').classList.add('open');
+}
+function closeItemModal(){document.getElementById('itemModal').classList.remove('open');}
+async function saveItem(){
+  var id=document.getElementById('editId').value;
+  var data={
+    name:document.getElementById('fieldName').value.trim(),
+    category:document.getElementById('fieldCategory').value.trim(),
+    stock:parseInt(document.getElementById('fieldStock').value)||0,
+    min_stock:parseInt(document.getElementById('fieldMinStock').value)||0,
+    unit:document.getElementById('fieldUnit').value.trim()||'個'
+  };
+  if(!data.name||!data.category){alert('品名とカテゴリは必須です');return;}
+  if(id){await sb.from('items').update(data).eq('id',id);}
+  else{await sb.from('items').insert(data);}
+  closeItemModal();
+}
+async function deleteItem(id,name){
+  if(!confirm('「'+name+'」を削除しますか？'))return;
+  await sb.from('items').delete().eq('id',id);
+}
+function openOrderModal(itemId,itemName){
+  document.getElementById('orderItemId').value=itemId;
+  document.getElementById('orderItemName').textContent=itemName;
+  document.getElementById('orderQty').value='1';
+  document.getElementById('orderModal').classList.add('open');
+}
+function closeOrderModal(){document.getElementById('orderModal').classList.remove('open');}
+async function submitOrder(){
+  var itemId=document.getElementById('orderItemId').value;
+  var qty=parseInt(document.getElementById('orderQty').value)||1;
+  await sb.from('orders').insert({item_id:itemId,quantity:qty,status:'pending'});
+  closeOrderModal();
+  switchTab('orders');
+}
+function switchTab(tab){
+  document.getElementById('tab-stock').classList.toggle('active',tab==='stock');
+  document.getElementById('tab-orders').classList.toggle('active',tab==='orders');
+  document.getElementById('page-stock').classList.toggle('active',tab==='stock');
+  document.getElementById('page-orders').classList.toggle('active',tab==='orders');
+}
+
+// 起動
+setupPWA();
+window.addEventListener('load',function(){
+  var url=localStorage.getItem('sb_url');
+  var key=localStorage.getItem('sb_key');
+  if(url&&key){
+    document.getElementById('inputUrl').value=url;
+    document.getElementById('inputKey').value=key;
+    connect(url,key);
+  }
+});
+</script>
+</body>
+</html>
