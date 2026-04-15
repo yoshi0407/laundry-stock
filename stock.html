@@ -12,8 +12,6 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#185FA5">
 <link rel="manifest" id="manifestLink">
-
-<!-- ホーム画面アイコン（iOSとAndroid両対応） -->
 <link rel="apple-touch-icon" id="appleIcon">
 
 <style>
@@ -97,6 +95,19 @@
   .btn-status.to-received { background: var(--green-bg); color: var(--green-text); }
   .btn-del-order { padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; border: none; background: var(--red-bg); color: var(--red-text); }
 
+  /* ★ 月別発注金額集計 */
+  .monthly-summary { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
+  .monthly-summary-title { font-size: 13px; font-weight: 500; color: var(--blue-text); margin-bottom: 10px; }
+  .monthly-table { width: 100%; border-collapse: collapse; }
+  .monthly-table th { font-size: 11px; color: var(--text2); text-align: left; padding: 4px 6px; border-bottom: 0.5px solid var(--border); }
+  .monthly-table th:nth-child(2), .monthly-table td:nth-child(2) { text-align: right; }
+  .monthly-table th:nth-child(3), .monthly-table td:nth-child(3) { text-align: right; }
+  .monthly-table td { font-size: 13px; padding: 7px 6px; border-bottom: 0.5px solid var(--border); }
+  .monthly-table tr:last-child td { border-bottom: none; }
+  .monthly-total-row td { font-weight: 600; color: var(--blue); background: var(--blue-bg); }
+  .amount-val { color: var(--blue-text); font-weight: 500; }
+  .no-price-note { font-size: 11px; color: var(--text2); margin-top: 8px; }
+
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; padding: 20px; align-items: flex-end; justify-content: center; }
   .modal-overlay.open { display: flex; }
   .modal { background: var(--card); border-radius: 16px 16px 0 0; padding: 20px 16px calc(16px + var(--safe-bottom)); width: 100%; max-width: 480px; }
@@ -113,7 +124,6 @@
   .loading { text-align: center; padding: 40px 20px; color: var(--text2); }
   .err-box { background: var(--red-bg); color: var(--red-text); padding: 10px 14px; border-radius: 6px; font-size: 13px; margin: 0 12px 8px; display: none; }
 
-  /* PWAインストール促進バナー */
   .install-banner { background: var(--blue-bg); border: 0.5px solid #B5D4F4; padding: 12px 16px; margin: 12px; border-radius: var(--radius); display: none; }
   .install-banner-inner { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .install-banner p { font-size: 13px; color: var(--blue-text); line-height: 1.5; }
@@ -132,7 +142,6 @@
   </div>
 </div>
 
-<!-- PWAインストール促進（Android Chrome用） -->
 <div class="install-banner" id="installBanner">
   <div class="install-banner-inner">
     <p>ホーム画面に追加するとアプリのように使えます</p>
@@ -164,6 +173,7 @@
     <div class="tab" id="tab-orders" onclick="switchTab('orders')">発注管理</div>
     <div class="tab" id="tab-settings" onclick="switchTab('settings')">設定</div>
   </div>
+
   <div class="page active" id="page-stock">
     <div class="filters">
       <input type="text" id="searchInput" placeholder="品名で検索..." oninput="renderItems()">
@@ -181,6 +191,7 @@
     <div id="itemList"><div class="loading">読み込み中...</div></div>
     <div style="height:80px;"></div>
   </div>
+
   <div class="page" id="page-orders">
     <div class="filters">
       <select id="orderStatusFilter" onchange="renderOrders()">
@@ -190,9 +201,21 @@
         <option value="received">入荷済み</option>
       </select>
     </div>
+    <!-- ★ 月別発注金額集計 -->
+    <div id="monthlySummary" class="monthly-summary" style="display:none;">
+      <div class="monthly-summary-title">📊 月別発注金額集計</div>
+      <table class="monthly-table">
+        <thead>
+          <tr><th>月</th><th>件数</th><th>合計金額</th></tr>
+        </thead>
+        <tbody id="monthlySummaryBody"></tbody>
+      </table>
+      <p class="no-price-note" id="noPriceNote" style="display:none;">※ 金額未入力の発注は集計に含まれません</p>
+    </div>
     <div id="orderList"><div class="loading">読み込み中...</div></div>
     <div style="height:80px;"></div>
   </div>
+
   <div class="page" id="page-settings">
     <div class="card" style="margin-top:4px;">
       <div style="font-weight:500;margin-bottom:12px;">🔔 通知設定</div>
@@ -217,6 +240,7 @@
 
 <button class="fab" id="fabBtn">＋</button>
 
+<!-- 品目モーダル -->
 <div class="modal-overlay" id="itemModal">
   <div class="modal">
     <h2 id="modalTitle">品目を追加</h2>
@@ -233,12 +257,17 @@
   </div>
 </div>
 
+<!-- ★ 発注モーダル：金額入力欄追加 -->
 <div class="modal-overlay" id="orderModal">
   <div class="modal">
     <h2>発注を登録する</h2>
     <input type="hidden" id="orderItemId">
     <p id="orderItemName" style="font-weight:500;margin-bottom:12px;font-size:15px;"></p>
     <div class="form-group"><label>発注数量</label><input type="number" id="orderQty" value="1" min="1"></div>
+    <div class="form-group">
+      <label>金額（円）<span style="font-size:11px;color:var(--text2);margin-left:4px;">任意</span></label>
+      <input type="number" id="orderPrice" min="0" placeholder="例：3500">
+    </div>
     <div class="modal-footer">
       <button class="btn-cancel" id="closeOrderBtn">キャンセル</button>
       <button class="btn-save" id="submitOrderBtn">発注登録</button>
@@ -254,49 +283,27 @@ var orders = [];
 var realtimeCh = null;
 var deferredPrompt = null;
 
-// --- PWA: manifest と アイコンをJSで動的生成（1ファイルで完結させるため）---
 function setupPWA() {
-  // SVGアイコンをbase64で生成（青背景に洗濯機マーク）
   var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#185FA5"/><text x="96" y="130" font-size="100" text-anchor="middle" fill="white">🧺</text></svg>';
   var iconUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
-
-  // apple-touch-icon
   document.getElementById('appleIcon').href = iconUrl;
-
-  // manifest.json をBlobで生成してリンク
   var manifest = {
-    name: '洗濯工場 在庫管理',
-    short_name: '在庫管理',
-    start_url: location.href,
-    display: 'standalone',
-    background_color: '#185FA5',
-    theme_color: '#185FA5',
-    lang: 'ja',
-    icons: [
-      { src: iconUrl, sizes: '192x192', type: 'image/svg+xml' },
-      { src: iconUrl, sizes: '512x512', type: 'image/svg+xml' }
-    ]
+    name: '洗濯工場 在庫管理', short_name: '在庫管理',
+    start_url: location.href, display: 'standalone',
+    background_color: '#185FA5', theme_color: '#185FA5', lang: 'ja',
+    icons: [{ src: iconUrl, sizes: '192x192', type: 'image/svg+xml' }, { src: iconUrl, sizes: '512x512', type: 'image/svg+xml' }]
   };
   var blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
   document.getElementById('manifestLink').href = URL.createObjectURL(blob);
 }
 
-// Android Chrome: インストールプロンプト
 window.addEventListener('beforeinstallprompt', function(e) {
-  e.preventDefault();
-  deferredPrompt = e;
-  if (!localStorage.getItem('pwa_banner_closed')) {
-    document.getElementById('installBanner').style.display = 'block';
-  }
+  e.preventDefault(); deferredPrompt = e;
+  if (!localStorage.getItem('pwa_banner_closed')) document.getElementById('installBanner').style.display = 'block';
 });
-window.addEventListener('appinstalled', function() {
-  document.getElementById('installBanner').style.display = 'none';
-});
+window.addEventListener('appinstalled', function() { document.getElementById('installBanner').style.display = 'none'; });
 
-// --- ユーティリティ ---
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function showErr(msg) { var e=document.getElementById('errBox'); e.textContent=msg; e.style.display='block'; }
 function hideErr() { document.getElementById('errBox').style.display='none'; }
 function setStatus(cls, label) {
@@ -312,43 +319,29 @@ function connect(url, key) {
     document.getElementById('mainApp').style.display='block';
     document.getElementById('fabBtn').style.display='flex';
     document.getElementById('reloadBtn').style.display='flex';
-    hideErr();
-    setStatus('','接続中...');
-    loadAll();
-    subscribeRealtime();
-  } catch(e) {
-    showErr('接続エラー：'+e.message);
-  }
+    hideErr(); setStatus('','接続中...');
+    loadAll(); subscribeRealtime();
+  } catch(e) { showErr('接続エラー：'+e.message); }
 }
 
-// --- イベント設定 ---
 document.getElementById('connectBtn').addEventListener('click', function(){
   var url=document.getElementById('inputUrl').value.trim();
   var key=document.getElementById('inputKey').value.trim();
   if(!url||!key){showErr('URLとキーを両方入力してください');return;}
   if(!url.startsWith('https://')){showErr('URLは https:// から始まる形式で入力してください');return;}
-  localStorage.setItem('sb_url',url);
-  localStorage.setItem('sb_key',key);
+  localStorage.setItem('sb_url',url); localStorage.setItem('sb_key',key);
   connect(url,key);
 });
-document.getElementById('installBtn').addEventListener('click', function(){
-  if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null;}
-});
-document.getElementById('closeBanner').addEventListener('click', function(){
-  document.getElementById('installBanner').style.display='none';
-  localStorage.setItem('pwa_banner_closed','1');
-});
+document.getElementById('installBtn').addEventListener('click', function(){ if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null;} });
+document.getElementById('closeBanner').addEventListener('click', function(){ document.getElementById('installBanner').style.display='none'; localStorage.setItem('pwa_banner_closed','1'); });
 document.getElementById('fabBtn').addEventListener('click', openAddModal);
 document.getElementById('closeItemBtn').addEventListener('click', closeItemModal);
 document.getElementById('saveItemBtn').addEventListener('click', saveItem);
 document.getElementById('closeOrderBtn').addEventListener('click', closeOrderModal);
 document.getElementById('submitOrderBtn').addEventListener('click', submitOrder);
-
-// モーダル背景クリックで閉じる
 document.getElementById('itemModal').addEventListener('click', function(e){ if(e.target===this)closeItemModal(); });
 document.getElementById('orderModal').addEventListener('click', function(e){ if(e.target===this)closeOrderModal(); });
 
-// --- データ操作 ---
 async function loadAll() {
   await Promise.all([loadItems(), loadOrders()]);
   setStatus('connected','同期済み');
@@ -416,85 +409,50 @@ async function changeStock(id,delta){
   if(!item)return;
   var prevStock=item.stock;
   var newStock=Math.max(0,item.stock+delta);
-  item.stock=newStock;
-  renderItems();
+  item.stock=newStock; renderItems();
   var r=await sb.from('items').update({stock:newStock}).eq('id',id);
   if(r.error){showErr('更新エラー：'+r.error.message);return;}
-  // 在庫が最低在庫数を下回った瞬間だけ通知（下回る前→下回った時のみ）
-  if(prevStock>=item.min_stock && newStock<item.min_stock){
-    notifyLowStock(item.name, newStock, item.min_stock);
-  }
+  if(prevStock>=item.min_stock && newStock<item.min_stock) notifyLowStock(item.name, newStock, item.min_stock);
 }
-function getNotifyEmail(){
-  return localStorage.getItem('notify_email') || '';
-}
-function saveNotifyEmail(){
-  var v = document.getElementById('notifyEmail').value.trim();
-  if(!v){alert('メールアドレスを入力してください');return;}
-  localStorage.setItem('notify_email', v);
-  alert('保存しました');
-}
-async function sendTestEmail(){
-  var email = getNotifyEmail();
-  if(!email){alert('先にメールアドレスを保存してください');return;}
-  await callNotifyFunction({type:'test', to:email, itemName:'テスト品目', stock:0, minStock:5});
-  alert('テストメールを送信しました（'+email+'）');
-}
-async function callNotifyFunction(payload){
-  try {
-    await fetch('https://bhfxfiirkryndorgykzc.supabase.co/functions/v1/notify-low-stock',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
-    });
-  } catch(e) {
-    console.warn('通知送信エラー：',e);
-  }
-}
-async function notifyLowStock(itemName, stock, minStock){
-  var email = getNotifyEmail();
-  showBrowserNotify('⚠️ 在庫不足：'+itemName, '残り'+stock+'　最低在庫：'+minStock);
-  await callNotifyFunction({to:email, itemName:itemName, stock:stock, minStock:minStock});
-}
-async function notifyNewOrder(itemName, qty){
-  var email = getNotifyEmail();
-  showBrowserNotify('📦 発注登録：'+itemName, '発注数：'+qty);
-  await callNotifyFunction({type:'order', to:email, itemName:itemName, stock:qty, minStock:0});
-}
-function showBrowserNotify(title, body){
-  if(Notification.permission === 'granted'){
-    new Notification(title, {body:body, icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgcng9IjQwIiBmaWxsPSIjMTg1RkE1Ii8+PHRleHQgeD0iOTYiIHk9IjEzMCIgZm9udC1zaXplPSIxMDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIj7wn6e6PC90ZXh0Pjwvc3ZnPg=='});
-  }
-}
-function requestNotifyPermission(){
-  Notification.requestPermission().then(function(p){
-    updateNotifyPermStatus();
-    if(p==='granted') showBrowserNotify('通知テスト','ブラウザ通知が有効になりました');
+
+// ★ 月別発注金額集計
+function renderMonthlySummary() {
+  var monthMap = {};
+  var hasNoPriceOrder = false;
+  orders.forEach(function(o) {
+    var d = new Date(o.created_at);
+    var key = d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0');
+    if(!monthMap[key]) monthMap[key] = {count:0, total:0};
+    monthMap[key].count++;
+    var p = (o.price !== null && o.price !== undefined && String(o.price) !== '') ? Number(o.price) : null;
+    if(p !== null && !isNaN(p) && p > 0) {
+      monthMap[key].total += p;
+    } else {
+      hasNoPriceOrder = true;
+    }
   });
+  var el = document.getElementById('monthlySummary');
+  if(orders.length === 0) { el.style.display='none'; return; }
+  el.style.display = 'block';
+  var months = Object.keys(monthMap).sort().reverse();
+  var grandTotal = months.reduce(function(s,k){return s+monthMap[k].total;},0);
+  var grandCount = months.reduce(function(s,k){return s+monthMap[k].count;},0);
+  document.getElementById('monthlySummaryBody').innerHTML = months.map(function(m) {
+    var row = monthMap[m];
+    return '<tr>'
+      +'<td>'+esc(m)+'</td>'
+      +'<td>'+row.count+'件</td>'
+      +'<td class="amount-val">'+(row.total>0?'¥'+row.total.toLocaleString():'—')+'</td>'
+      +'</tr>';
+  }).join('')
+  + (months.length > 1
+    ? '<tr class="monthly-total-row"><td>合計</td><td>'+grandCount+'件</td><td>'+(grandTotal>0?'¥'+grandTotal.toLocaleString():'—')+'</td></tr>'
+    : '');
+  document.getElementById('noPriceNote').style.display = hasNoPriceOrder ? 'block' : 'none';
 }
-function updateNotifyPermStatus(){
-  var p = Notification.permission;
-  var btn = document.getElementById('notifyPermBtn');
-  var st = document.getElementById('notifyPermStatus');
-  if(p==='granted'){
-    btn.textContent='✅ 通知許可済み';
-    btn.style.background='var(--green-bg)';
-    btn.style.color='var(--green-text)';
-    st.textContent='ブラウザ通知が有効です。';
-  } else if(p==='denied'){
-    btn.textContent='🚫 通知がブロックされています';
-    btn.style.background='var(--red-bg)';
-    btn.style.color='var(--red-text)';
-    st.textContent='ブラウザの設定から通知を許可してください。';
-  } else {
-    btn.textContent='通知を許可する';
-    st.textContent='タップして通知を有効にしてください。';
-  }
-  // メールアドレスフィールドに現在の値をセット
-  var saved = localStorage.getItem('notify_email');
-  if(saved){ var el=document.getElementById('notifyEmail'); if(el) el.value=saved; }
-}
+
 function renderOrders(){
+  renderMonthlySummary();
   var sf=document.getElementById('orderStatusFilter').value;
   var f=orders.filter(function(o){return!sf||o.status===sf;});
   var el=document.getElementById('orderList');
@@ -504,13 +462,15 @@ function renderOrders(){
     var nm=o.items?o.items.name:'（削除済み）';
     var un=o.items?o.items.unit:'';
     var dt=new Date(o.created_at).toLocaleDateString('ja-JP');
+    var priceStr=(o.price!==null&&o.price!==undefined&&String(o.price)!==''&&Number(o.price)>0)
+      ?'　¥'+Number(o.price).toLocaleString():'';
     var ac='';
     if(o.status==='pending')ac+='<button class="btn-status to-ordered" onclick="updateOrderStatus(\''+o.id+'\',\'ordered\')">発注済みにする</button>';
     if(o.status==='ordered')ac+='<button class="btn-status to-received" onclick="receiveOrder(\''+o.id+'\',\''+o.item_id+'\','+o.quantity+')">入荷済みにする</button>';
     ac+='<button class="btn-del-order" onclick="deleteOrder(\''+o.id+'\')">削除</button>';
     return '<div class="order-card">'
       +'<div class="order-header"><span class="order-name">'+esc(nm)+'</span><span class="badge '+o.status+'">'+sm[o.status]+'</span></div>'
-      +'<div class="order-qty">発注数：'+o.quantity+esc(un)+'　登録日：'+dt+'</div>'
+      +'<div class="order-qty">発注数：'+o.quantity+esc(un)+'　登録日：'+dt+esc(priceStr)+'</div>'
       +'<div class="order-actions">'+ac+'</div></div>';
   }).join('');
 }
@@ -576,18 +536,33 @@ function openOrderModal(itemId,itemName){
   document.getElementById('orderItemId').value=itemId;
   document.getElementById('orderItemName').textContent=itemName;
   document.getElementById('orderQty').value='1';
+  document.getElementById('orderPrice').value='';
   document.getElementById('orderModal').classList.add('open');
 }
 function closeOrderModal(){document.getElementById('orderModal').classList.remove('open');}
+
+// ★ 発注登録：金額保存 & 発注管理タブへ即時遷移
 async function submitOrder(){
   var itemId=document.getElementById('orderItemId').value;
   var itemName=document.getElementById('orderItemName').textContent;
   var qty=parseInt(document.getElementById('orderQty').value)||1;
-  await sb.from('orders').insert({item_id:itemId,quantity:qty,status:'pending'});
+  var priceRaw=document.getElementById('orderPrice').value.trim();
+  var price=(priceRaw!==''&&parseInt(priceRaw)>0)?parseInt(priceRaw):null;
+
+  var insertData={item_id:itemId, quantity:qty, status:'pending'};
+  if(price!==null) insertData.price=price;
+
+  var r=await sb.from('orders').insert(insertData).select('*, items(name,unit)');
+  if(r.error){showErr('発注エラー：'+r.error.message);return;}
+
+  // ★ ローカル配列の先頭に追加して即時反映
+  if(r.data && r.data.length>0) orders.unshift(r.data[0]);
+
   closeOrderModal();
-  switchTab('orders');
+  switchTab('orders'); // ★ 発注管理タブへ自動遷移
   notifyNewOrder(itemName, qty);
 }
+
 async function manualReload(){
   var btn=document.getElementById('reloadBtn');
   btn.style.opacity='0.4';
@@ -600,8 +575,10 @@ async function bulkOrder(){
   var names=lowItems.map(function(i){return i.name+'（残'+i.stock+i.unit+'）';}).join('\n');
   if(!confirm('以下の品目を発注登録しますか？\n\n'+names))return;
   var rows=lowItems.map(function(i){return{item_id:i.id,quantity:1,status:'pending'};});
-  var r=await sb.from('orders').insert(rows);
+  var r=await sb.from('orders').insert(rows).select('*, items(name,unit)');
   if(r.error){showErr('発注エラー：'+r.error.message);return;}
+  // ★ 即時反映
+  if(r.data && r.data.length>0){ r.data.reverse().forEach(function(o){orders.unshift(o);}); }
   alert(lowItems.length+'件の発注を登録しました');
   switchTab('orders');
 }
@@ -614,24 +591,67 @@ function switchTab(tab){
     document.getElementById('tab-'+t).classList.toggle('active',tab===t);
     document.getElementById('page-'+t).classList.toggle('active',tab===t);
   });
+  if(tab==='orders') renderOrders();
   if(tab==='settings') updateNotifyPermStatus();
 }
+function getNotifyEmail(){ return localStorage.getItem('notify_email') || ''; }
+function saveNotifyEmail(){
+  var v=document.getElementById('notifyEmail').value.trim();
+  if(!v){alert('メールアドレスを入力してください');return;}
+  localStorage.setItem('notify_email',v); alert('保存しました');
+}
+async function sendTestEmail(){
+  var email=getNotifyEmail();
+  if(!email){alert('先にメールアドレスを保存してください');return;}
+  await callNotifyFunction({type:'test',to:email,itemName:'テスト品目',stock:0,minStock:5});
+  alert('テストメールを送信しました（'+email+'）');
+}
+async function callNotifyFunction(payload){
+  try {
+    await fetch('https://bhfxfiirkryndorgykzc.supabase.co/functions/v1/notify-low-stock',{
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+    });
+  } catch(e){ console.warn('通知送信エラー：',e); }
+}
+async function notifyLowStock(itemName, stock, minStock){
+  showBrowserNotify('⚠️ 在庫不足：'+itemName, '残り'+stock+'　最低在庫：'+minStock);
+  await callNotifyFunction({to:getNotifyEmail(), itemName:itemName, stock:stock, minStock:minStock});
+}
+async function notifyNewOrder(itemName, qty){
+  showBrowserNotify('📦 発注登録：'+itemName, '発注数：'+qty);
+  await callNotifyFunction({type:'order', to:getNotifyEmail(), itemName:itemName, stock:qty, minStock:0});
+}
+function showBrowserNotify(title, body){
+  if(Notification.permission==='granted') new Notification(title,{body:body});
+}
+function requestNotifyPermission(){
+  Notification.requestPermission().then(function(p){
+    updateNotifyPermStatus();
+    if(p==='granted') showBrowserNotify('通知テスト','ブラウザ通知が有効になりました');
+  });
+}
+function updateNotifyPermStatus(){
+  var p=Notification.permission;
+  var btn=document.getElementById('notifyPermBtn');
+  var st=document.getElementById('notifyPermStatus');
+  if(p==='granted'){btn.textContent='✅ 通知許可済み';btn.style.background='var(--green-bg)';btn.style.color='var(--green-text)';st.textContent='ブラウザ通知が有効です。';}
+  else if(p==='denied'){btn.textContent='🚫 通知がブロックされています';btn.style.background='var(--red-bg)';btn.style.color='var(--red-text)';st.textContent='ブラウザの設定から通知を許可してください。';}
+  else{btn.textContent='通知を許可する';st.textContent='タップして通知を有効にしてください。';}
+  var saved=localStorage.getItem('notify_email');
+  if(saved){var el=document.getElementById('notifyEmail');if(el)el.value=saved;}
+}
 
-// 起動
 setupPWA();
 
-// ★ Supabase接続情報（ここに直接入力）
 var SUPABASE_URL = 'https://bhfxfiirkryndorgykzc.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoZnhmaWlya3J5bmRvcmd5a3pjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxOTI3MzQsImV4cCI6MjA5MTc2ODczNH0.3qXRed5-keTHDvXVXjSrErq1tqzZxz2x9x4KnNG-OPw';
 
 window.addEventListener('load',function(){
-  // ハードコードされたキーがあれば優先して自動接続
   if(SUPABASE_URL && SUPABASE_KEY){
     document.getElementById('setupBanner').style.display='none';
     connect(SUPABASE_URL, SUPABASE_KEY);
     return;
   }
-  // フォールバック：localStorageに保存済みのキーで接続
   var url=localStorage.getItem('sb_url');
   var key=localStorage.getItem('sb_key');
   if(url&&key){
