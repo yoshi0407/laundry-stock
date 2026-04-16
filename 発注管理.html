@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<!-- saved from url=(0050)file:///C:/Users/yoshihito/Downloads/stock_20.html -->
+<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>発注管理</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="発注管理">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#185FA5">
+<link rel="manifest" id="manifestLink" href="blob:null/b187828c-ede7-4c88-a85b-d260c6cee571">
+<link rel="apple-touch-icon" id="appleIcon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgcng9IjQwIiBmaWxsPSIjMTg1RkE1Ii8+PHRleHQgeD0iOTYiIHk9IjEzMCIgZm9udC1zaXplPSIxMDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIj7wn5OmPC90ZXh0Pjwvc3ZnPg==">
+<style>
+:root {
+  --bg: #f5f5f0;
+  --card: #ffffff;
+  --border: rgba(0,0,0,0.12);
+  --text: #1a1a1a;
+  --text2: #666;
+  --blue: #185FA5;
+  --blue-bg: #E6F1FB;
+  --blue-text: #0C447C;
+  --green-bg: #EAF3DE;
+  --green-text: #27500A;
+  --amber: #854F0B;
+  --amber-bg: #FAEEDA;
+  --amber-text: #633806;
+  --red-bg: #FCEBEB;
+  --red-text: #791F1F;
+  --radius: 10px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+  background: var(--bg); color: var(--text); font-size: 14px;
+  padding-top: var(--safe-top); padding-bottom: var(--safe-bottom);
+}
+.header {
+  background: var(--blue); color: #fff; padding: 12px 16px;
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header h1 { font-size: 16px; font-weight: 500; color: #fff; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); display: inline-block; margin-right: 6px; }
+.status-dot.connected { background: #9FE1CB; }
+.status-dot.error { background: #F09595; }
+.sync-label { font-size: 11px; color: rgba(255,255,255,0.8); }
+.tabs {
+  display: flex; background: var(--card);
+  border-bottom: 0.5px solid var(--border);
+  position: sticky; top: 44px; z-index: 90;
+}
+.tab {
+  flex: 1; padding: 10px 4px; text-align: center; font-size: 12px;
+  cursor: pointer; color: var(--text2); border-bottom: 2px solid transparent;
+}
+.tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 500; }
+.page { display: none; padding: 12px; }
+.page.active { display: block; }
+.filters { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.filters input, .filters select {
+  flex: 1; min-width: 120px; padding: 7px 10px;
+  border: 0.5px solid var(--border); border-radius: 6px;
+  font-size: 13px; background: var(--card); color: var(--text);
+}
+.card {
+  background: var(--card); border: 0.5px solid var(--border);
+  border-radius: var(--radius); padding: 12px; margin-bottom: 8px;
+}
+.item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.item-name { font-weight: 500; font-size: 14px; }
+.item-meta { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+.item-price { font-size: 13px; color: var(--blue-text); font-weight: 500; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.badge.pending { background: var(--blue-bg); color: var(--blue-text); }
+.badge.completed { background: var(--green-bg); color: var(--green-text); }
+.action-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.btn-sm { padding: 6px 12px; border: 0.5px solid var(--border); border-radius: 6px; font-size: 12px; cursor: pointer; background: var(--bg); color: var(--text); }
+.btn-sm.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+.btn-sm.danger { color: var(--red-text); border-color: #F7C1C1; }
+.fab {
+  position: fixed; bottom: calc(24px + var(--safe-bottom)); right: 20px;
+  width: 54px; height: 54px; border-radius: 50%; background: var(--blue);
+  color: #fff; border: none; font-size: 28px; cursor: pointer;
+  display: none; align-items: center; justify-content: center;
+  box-shadow: 0 3px 12px rgba(24,95,165,0.4); z-index: 50;
+}
+.order-card {
+  background: var(--card); border: 0.5px solid var(--border);
+  border-radius: var(--radius); padding: 12px; margin-bottom: 8px;
+}
+.order-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.order-name { font-weight: 500; font-size: 14px; }
+.order-detail { font-size: 12px; color: var(--text2); margin-bottom: 8px; line-height: 1.7; }
+.order-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.btn-complete { padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; border: none; background: var(--green-bg); color: var(--green-text); }
+.btn-del-order { padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; border: none; background: var(--red-bg); color: var(--red-text); }
+/* サブタブ */
+.sub-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.sub-tab {
+  flex: 1; padding: 8px; text-align: center; font-size: 13px;
+  cursor: pointer; color: var(--text2); background: var(--bg);
+  border: 0.5px solid var(--border); border-radius: 8px;
+}
+.sub-tab.active { background: var(--blue-bg); color: var(--blue-text); border-color: var(--blue); font-weight: 500; }
+/* レポート */
+.report-section { margin-bottom: 16px; }
+.report-section-title { font-size: 13px; font-weight: 500; color: var(--blue-text); margin-bottom: 8px; }
+.month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.month-nav-btn {
+  width: 36px; height: 36px; border-radius: 50%; border: 0.5px solid var(--border);
+  background: var(--bg); font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; color: var(--text);
+}
+.month-nav-title { font-size: 15px; font-weight: 500; color: var(--blue-text); }
+.kpi-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.kpi-card { flex: 1; background: var(--blue-bg); border-radius: var(--radius); padding: 10px 12px; text-align: center; }
+.kpi-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+.kpi-value { font-size: 18px; font-weight: 600; color: var(--blue-text); }
+.report-table-wrap { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
+.report-table { width: 100%; border-collapse: collapse; }
+.report-table th { font-size: 11px; color: var(--text2); text-align: left; padding: 8px 10px; background: var(--bg); border-bottom: 0.5px solid var(--border); }
+.report-table th.r { text-align: right; }
+.report-table td { font-size: 13px; padding: 9px 10px; border-bottom: 0.5px solid var(--border); }
+.report-table td.r { text-align: right; color: var(--blue-text); font-weight: 500; }
+.report-table tr:last-child td { border-bottom: none; }
+.report-table .total-row td { font-weight: 600; background: var(--blue-bg); color: var(--blue); }
+.period-filter { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.period-btn { padding: 6px 12px; border: 0.5px solid var(--border); border-radius: 20px; font-size: 12px; cursor: pointer; background: var(--bg); color: var(--text); }
+.period-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+/* モーダル */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  z-index: 200; padding: 20px; align-items: flex-end; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--card); border-radius: 16px 16px 0 0;
+  padding: 20px 16px calc(16px + var(--safe-bottom));
+  width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+}
+.modal h2 { font-size: 15px; font-weight: 500; margin-bottom: 14px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+.form-group input, .form-group select {
+  width: 100%; padding: 10px 12px; border: 0.5px solid var(--border);
+  border-radius: 8px; font-size: 16px; color: var(--text); background: var(--card);
+}
+.modal-footer { display: flex; gap: 8px; margin-top: 16px; }
+.modal-footer button { flex: 1; padding: 12px; border-radius: 8px; font-size: 15px; cursor: pointer; border: none; }
+.btn-cancel { background: var(--bg); color: var(--text); border: 0.5px solid var(--border) !important; }
+.btn-save { background: var(--blue); color: #fff; font-weight: 500; }
+.unit-price-hint { font-size: 11px; color: var(--blue-text); margin-top: 5px; background: var(--blue-bg); padding: 4px 8px; border-radius: 4px; }
+.order-total-display {
+  background: var(--blue-bg); border-radius: 8px; padding: 10px 14px; margin-top: 8px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.order-total-label { font-size: 12px; color: var(--blue-text); }
+.order-total-value { font-size: 20px; font-weight: 700; color: var(--blue-text); }
+/* まとめて発注 */
+.bulk-item-row {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 0; border-bottom: 0.5px solid var(--border);
+}
+.bulk-item-row:last-child { border-bottom: none; }
+.bulk-item-info { flex: 1; min-width: 0; }
+.bulk-item-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bulk-item-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.bulk-right { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.bulk-qty-wrap { display: flex; align-items: center; gap: 4px; }
+.bulk-qty-btn {
+  width: 28px; height: 28px; border-radius: 50%; border: 0.5px solid var(--border);
+  background: var(--bg); font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0;
+}
+.bulk-qty-input {
+  width: 48px; text-align: center; padding: 4px 6px;
+  border: 0.5px solid var(--border); border-radius: 6px;
+  font-size: 15px; font-weight: 500; color: var(--text); background: var(--card);
+}
+.bulk-price-input {
+  width: 90px; text-align: right; padding: 4px 6px;
+  border: 0.5px solid var(--border); border-radius: 6px;
+  font-size: 13px; color: var(--text); background: var(--card);
+}
+.bulk-date-input {
+  width: 140px; padding: 4px 6px; border: 0.5px solid var(--border);
+  border-radius: 6px; font-size: 12px; color: var(--text); background: var(--card);
+}
+.bulk-total-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 0; margin-top: 4px; }
+.bulk-total-label { font-size: 12px; color: var(--text2); }
+.bulk-total-value { font-size: 16px; font-weight: 700; color: var(--blue-text); }
+/* misc */
+.empty { text-align: center; padding: 40px 20px; color: var(--text2); font-size: 13px; }
+.loading { text-align: center; padding: 40px 20px; color: var(--text2); }
+.err-box { background: var(--red-bg); color: var(--red-text); padding: 10px 14px; border-radius: 6px; font-size: 13px; margin: 0 12px 8px; display: none; }
+.install-banner { background: var(--blue-bg); border: 0.5px solid #B5D4F4; padding: 12px 16px; margin: 12px; border-radius: var(--radius); display: none; }
+.install-banner-inner { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.install-banner p { font-size: 13px; color: var(--blue-text); line-height: 1.5; }
+.install-banner button { padding: 6px 14px; background: var(--blue); color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.install-banner .close-btn { background: none; color: var(--blue-text); padding: 4px; font-size: 16px; }
+.section-note { font-size: 11px; color: var(--text2); margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📦 発注管理</h1>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button id="reloadBtn" style="background: rgba(255, 255, 255, 0.2); border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; color: rgb(255, 255, 255); font-size: 16px; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; opacity: 1;">↻</button>
+    <span class="status-dot connected" id="statusDot"></span>
+    <span class="sync-label" id="syncLabel">リアルタイム同期中</span>
+  </div>
+</div>
+
+<div class="install-banner" id="installBanner">
+  <div class="install-banner-inner">
+    <p>ホーム画面に追加するとアプリのように使えます</p>
+    <button id="installBtn">追加する</button>
+    <button class="close-btn" id="closeBanner">✕</button>
+  </div>
+</div>
+
+<div class="err-box" id="errBox" style="display: none;"></div>
+
+<div id="mainApp" style="display: block;">
+  <div class="tabs">
+    <div class="tab active" id="tab-items" onclick="switchTab(&#39;items&#39;)">品目一覧</div>
+    <div class="tab" id="tab-orders" onclick="switchTab(&#39;orders&#39;)">発注管理</div>
+    <div class="tab" id="tab-report" onclick="switchTab(&#39;report&#39;)">レポート</div>
+    <div class="tab" id="tab-settings" onclick="switchTab(&#39;settings&#39;)">設定</div>
+  </div>
+
+  <!-- 品目一覧 -->
+  <div class="page active" id="page-items">
+    <div class="filters">
+      <input type="text" id="searchInput" placeholder="品名で検索..." oninput="renderItems()">
+      <select id="categoryFilter" onchange="renderItems()"><option value="">全カテゴリ</option><option value="おしぼり用">おしぼり用</option><option value="包装用ビニール">包装用ビニール</option><option value="染み抜き剤">染み抜き剤</option><option value="洗剤">洗剤</option><option value="紐">紐</option></select>
+    </div>
+    <div id="itemList"><div class="card"><div class="item-header"><span class="item-name">ＦＢフィルム白</span></div><div class="item-meta">おしぼり用</div><div class="item-price">単価 ¥5,870 / 箱</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;30152da6-8d39-471e-810f-ae160f98ad29&#39;,&#39;ＦＢフィルム白&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;30152da6-8d39-471e-810f-ae160f98ad29&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;30152da6-8d39-471e-810f-ae160f98ad29&#39;,&#39;ＦＢフィルム白&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">ＦＢフィルム青</span></div><div class="item-meta">おしぼり用</div><div class="item-price">単価 ¥8,260 / 箱</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;625f449f-99c9-43c5-ad1f-fa9ba375b188&#39;,&#39;ＦＢフィルム青&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;625f449f-99c9-43c5-ad1f-fa9ba375b188&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;625f449f-99c9-43c5-ad1f-fa9ba375b188&#39;,&#39;ＦＢフィルム青&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">おしぼりシートフィルム280*1500</span></div><div class="item-meta">おしぼり用</div><div class="item-price">単価 ¥12,660 / 箱</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;af1c7255-1c92-43f5-9e26-00eb3f814ddd&#39;,&#39;おしぼりシートフィルム280*1500&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;af1c7255-1c92-43f5-9e26-00eb3f814ddd&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;af1c7255-1c92-43f5-9e26-00eb3f814ddd&#39;,&#39;おしぼりシートフィルム280*1500&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">サーマルプリンターリボン</span></div><div class="item-meta">おしぼり用</div><div class="item-price">単価 ¥22,800 / 箱</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;faae7313-d71c-4994-a7f8-f5504774070c&#39;,&#39;サーマルプリンターリボン&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;faae7313-d71c-4994-a7f8-f5504774070c&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;faae7313-d71c-4994-a7f8-f5504774070c&#39;,&#39;サーマルプリンターリボン&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">ＬＸ２６０包装用ビニール</span></div><div class="item-meta">包装用ビニール</div><div class="item-price">単価 ¥5,970 / 箱</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;6893983c-3304-4ee9-9952-53f74140ef78&#39;,&#39;ＬＸ２６０包装用ビニール&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;6893983c-3304-4ee9-9952-53f74140ef78&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;6893983c-3304-4ee9-9952-53f74140ef78&#39;,&#39;ＬＸ２６０包装用ビニール&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">ＬX３６０包装用ビニール</span></div><div class="item-meta">包装用ビニール</div><div class="item-price">単価 ¥8,070 / 箱</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;4ca2cfcb-eda6-4452-a124-b2fdbc99605a&#39;,&#39;ＬX３６０包装用ビニール&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;4ca2cfcb-eda6-4452-a124-b2fdbc99605a&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;4ca2cfcb-eda6-4452-a124-b2fdbc99605a&#39;,&#39;ＬX３６０包装用ビニール&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">ＰＥ４４０片開きビニール</span></div><div class="item-meta">包装用ビニール</div><div class="item-price">単価 ¥7,400 / 本</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;a69be135-ad46-4b7b-85aa-9fa3d7a747cc&#39;,&#39;ＰＥ４４０片開きビニール&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;a69be135-ad46-4b7b-85aa-9fa3d7a747cc&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;a69be135-ad46-4b7b-85aa-9fa3d7a747cc&#39;,&#39;ＰＥ４４０片開きビニール&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">ＰＥ４５０包装用ビニール</span></div><div class="item-meta">包装用ビニール</div><div class="item-price">単価 ¥7,050 / 箱</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;b8926603-e184-41dd-bb02-9fdddfdf8f05&#39;,&#39;ＰＥ４５０包装用ビニール&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;b8926603-e184-41dd-bb02-9fdddfdf8f05&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;b8926603-e184-41dd-bb02-9fdddfdf8f05&#39;,&#39;ＰＥ４５０包装用ビニール&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">ガーメント無地1250</span></div><div class="item-meta">包装用ビニール</div><div class="item-price">単価未設定</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;119b97d0-33f0-4863-9f31-a2f0618510b9&#39;,&#39;ガーメント無地1250&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;119b97d0-33f0-4863-9f31-a2f0618510b9&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;119b97d0-33f0-4863-9f31-a2f0618510b9&#39;,&#39;ガーメント無地1250&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">ガーメント目地無し１０００</span></div><div class="item-meta">包装用ビニール</div><div class="item-price">単価 ¥3,650 / 本</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;100b6802-f747-4754-a0fd-e64472f42b1b&#39;,&#39;ガーメント目地無し１０００&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;100b6802-f747-4754-a0fd-e64472f42b1b&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;100b6802-f747-4754-a0fd-e64472f42b1b&#39;,&#39;ガーメント目地無し１０００&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">スポッターA</span></div><div class="item-meta">染み抜き剤</div><div class="item-price">単価未設定</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;a7fb7965-e013-40b6-be85-6354f2824497&#39;,&#39;スポッターA&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;a7fb7965-e013-40b6-be85-6354f2824497&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;a7fb7965-e013-40b6-be85-6354f2824497&#39;,&#39;スポッターA&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">ＳＡリキットＣ</span></div><div class="item-meta">洗剤</div><div class="item-price">単価 ¥2,800 / 本</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;4d4b07da-8c67-4c79-b7d9-30504b68a3cc&#39;,&#39;ＳＡリキットＣ&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;4d4b07da-8c67-4c79-b7d9-30504b68a3cc&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;4d4b07da-8c67-4c79-b7d9-30504b68a3cc&#39;,&#39;ＳＡリキットＣ&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">アタック消臭ストロング</span></div><div class="item-meta">洗剤</div><div class="item-price">単価 ¥7,066 / 箱</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;86e04940-09d2-410c-839b-e89511fdf671&#39;,&#39;アタック消臭ストロング&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;86e04940-09d2-410c-839b-e89511fdf671&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;86e04940-09d2-410c-839b-e89511fdf671&#39;,&#39;アタック消臭ストロング&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">サニタル</span></div><div class="item-meta">洗剤</div><div class="item-price">単価未設定</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;ddb0b707-45a1-4a36-a7e1-47ca0ae8154c&#39;,&#39;サニタル&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;ddb0b707-45a1-4a36-a7e1-47ca0ae8154c&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;ddb0b707-45a1-4a36-a7e1-47ca0ae8154c&#39;,&#39;サニタル&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">サニタル</span></div><div class="item-meta">洗剤</div><div class="item-price">単価未設定</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;4cc90d96-e8b4-4c46-97e9-1a5f273dd609&#39;,&#39;サニタル&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;4cc90d96-e8b4-4c46-97e9-1a5f273dd609&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;4cc90d96-e8b4-4c46-97e9-1a5f273dd609&#39;,&#39;サニタル&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">スーパースターチ</span></div><div class="item-meta">洗剤</div><div class="item-price">単価 ¥5,500 / 箱</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;900e1008-cdd1-466d-8808-5ab2ad7fc984&#39;,&#39;スーパースターチ&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;900e1008-cdd1-466d-8808-5ab2ad7fc984&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;900e1008-cdd1-466d-8808-5ab2ad7fc984&#39;,&#39;スーパースターチ&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">ホワイトパワー</span></div><div class="item-meta">洗剤</div><div class="item-price">単価 ¥5,766 / 箱</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;0ea3c230-ea8e-4319-99a0-835f198bccd3&#39;,&#39;ホワイトパワー&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;0ea3c230-ea8e-4319-99a0-835f198bccd3&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;0ea3c230-ea8e-4319-99a0-835f198bccd3&#39;,&#39;ホワイトパワー&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">次亜塩素</span></div><div class="item-meta">洗剤</div><div class="item-price">単価 ¥54 / リットル</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;4ad9648b-9d87-4b4c-9efd-b269562cdcf4&#39;,&#39;次亜塩素&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;4ad9648b-9d87-4b4c-9efd-b269562cdcf4&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;4ad9648b-9d87-4b4c-9efd-b269562cdcf4&#39;,&#39;次亜塩素&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">過炭酸ナトリウムPC</span></div><div class="item-meta">洗剤</div><div class="item-price">単価 ¥6,500 / 袋</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;53538cec-8615-41bd-8b55-2aed018a7c6a&#39;,&#39;過炭酸ナトリウムPC&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;53538cec-8615-41bd-8b55-2aed018a7c6a&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;53538cec-8615-41bd-8b55-2aed018a7c6a&#39;,&#39;過炭酸ナトリウムPC&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">ダイヤフラット結束紐（白）</span></div><div class="item-meta">紐</div><div class="item-price">単価 ¥11,400 / 箱</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;48674ddd-542e-4695-8c15-e7bc4f3d8b26&#39;,&#39;ダイヤフラット結束紐（白）&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;48674ddd-542e-4695-8c15-e7bc4f3d8b26&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;48674ddd-542e-4695-8c15-e7bc4f3d8b26&#39;,&#39;ダイヤフラット結束紐（白）&#39;)">削除</button></div></div><div class="card"><div class="item-header"><span class="item-name">ダイヤフラット結束紐(黄)</span></div><div class="item-meta">紐</div><div class="item-price">単価 ¥12,600 / 箱</div><div class="action-row"><button class="btn-sm primary" onclick="openOrderModal(&#39;cb173313-bbc9-4b0a-a352-d2b150b67cf8&#39;,&#39;ダイヤフラット結束紐(黄)&#39;)">発注登録</button><button class="btn-sm" onclick="openEditModal(&#39;cb173313-bbc9-4b0a-a352-d2b150b67cf8&#39;)">編集</button><button class="btn-sm danger" onclick="deleteItem(&#39;cb173313-bbc9-4b0a-a352-d2b150b67cf8&#39;,&#39;ダイヤフラット結束紐(黄)&#39;)">削除</button></div></div></div>
+    <div style="height:80px;"></div>
+  </div>
+
+  <!-- 発注管理 -->
+  <div class="page" id="page-orders">
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button onclick="openBulkOrderModal()" style="flex:1;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;">＋ まとめて発注登録</button>
+    </div>
+    <div class="filters">
+      <select id="orderStatusFilter" onchange="renderOrders()">
+        <option value="">全ステータス</option>
+        <option value="pending">発注待ち</option>
+        <option value="completed">完了</option>
+      </select>
+      <select id="orderItemFilter" onchange="renderOrders()"><option value="">全品目</option><option value="30152da6-8d39-471e-810f-ae160f98ad29">ＦＢフィルム白</option><option value="625f449f-99c9-43c5-ad1f-fa9ba375b188">ＦＢフィルム青</option><option value="af1c7255-1c92-43f5-9e26-00eb3f814ddd">おしぼりシートフィルム280*1500</option><option value="faae7313-d71c-4994-a7f8-f5504774070c">サーマルプリンターリボン</option><option value="6893983c-3304-4ee9-9952-53f74140ef78">ＬＸ２６０包装用ビニール</option><option value="4ca2cfcb-eda6-4452-a124-b2fdbc99605a">ＬX３６０包装用ビニール</option><option value="a69be135-ad46-4b7b-85aa-9fa3d7a747cc">ＰＥ４４０片開きビニール</option><option value="b8926603-e184-41dd-bb02-9fdddfdf8f05">ＰＥ４５０包装用ビニール</option><option value="119b97d0-33f0-4863-9f31-a2f0618510b9">ガーメント無地1250</option><option value="100b6802-f747-4754-a0fd-e64472f42b1b">ガーメント目地無し１０００</option><option value="a7fb7965-e013-40b6-be85-6354f2824497">スポッターA</option><option value="4d4b07da-8c67-4c79-b7d9-30504b68a3cc">ＳＡリキットＣ</option><option value="86e04940-09d2-410c-839b-e89511fdf671">アタック消臭ストロング</option><option value="ddb0b707-45a1-4a36-a7e1-47ca0ae8154c">サニタル</option><option value="4cc90d96-e8b4-4c46-97e9-1a5f273dd609">サニタル</option><option value="900e1008-cdd1-466d-8808-5ab2ad7fc984">スーパースターチ</option><option value="0ea3c230-ea8e-4319-99a0-835f198bccd3">ホワイトパワー</option><option value="4ad9648b-9d87-4b4c-9efd-b269562cdcf4">次亜塩素</option><option value="53538cec-8615-41bd-8b55-2aed018a7c6a">過炭酸ナトリウムPC</option><option value="48674ddd-542e-4695-8c15-e7bc4f3d8b26">ダイヤフラット結束紐（白）</option><option value="cb173313-bbc9-4b0a-a352-d2b150b67cf8">ダイヤフラット結束紐(黄)</option></select>
+    </div>
+    <div id="orderList"><div class="order-card"><div class="order-header"><span class="order-name">サーマルプリンターリボン</span><span class="badge completed">完了</span></div><div class="order-detail">数量：2箱　金額：¥45,600<br>登録日：2026/4/15　納入希望：最短</div><div class="order-actions"><button class="btn-del-order" onclick="deleteOrder(&#39;511fd0c0-ff39-429d-98dc-717b5c6a2c95&#39;)">削除</button></div></div></div>
+    <div style="height:80px;"></div>
+  </div>
+
+  <!-- レポート -->
+  <div class="page" id="page-report">
+    <div class="sub-tabs">
+      <div class="sub-tab active" id="subtab-monthly" onclick="switchReportTab(&#39;monthly&#39;)">📅 月別</div>
+      <div class="sub-tab" id="subtab-items" onclick="switchReportTab(&#39;items&#39;)">📊 品目別</div>
+    </div>
+
+    <!-- 月別レポート -->
+    <div id="reportMonthlyPanel">
+      <div class="month-nav">
+        <button class="month-nav-btn" onclick="changeReportMonth(-1)">‹</button>
+        <span class="month-nav-title" id="reportMonthTitle"></span>
+        <button class="month-nav-btn" onclick="changeReportMonth(1)">›</button>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">発注件数</div><div class="kpi-value" id="reportCount">0件</div></div>
+        <div class="kpi-card"><div class="kpi-label">合計金額</div><div class="kpi-value" id="reportTotal">—</div></div>
+      </div>
+      <div class="report-section">
+        <div class="report-section-title">品目別内訳</div>
+        <div class="report-table-wrap">
+          <table class="report-table">
+            <thead><tr><th>品目</th><th class="r">件数</th><th class="r">金額</th></tr></thead>
+            <tbody id="reportMonthlyItemBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="report-section">
+        <div class="report-section-title">発注一覧</div>
+        <div id="reportMonthlyOrderList"></div>
+      </div>
+    </div>
+
+    <!-- 品目別レポート -->
+    <div id="reportItemsPanel" style="display:none;">
+      <div class="period-filter" id="periodFilter">
+        <button class="period-btn active" onclick="setPeriod(3)" data-period="3">3ヶ月</button>
+        <button class="period-btn" onclick="setPeriod(6)" data-period="6">6ヶ月</button>
+        <button class="period-btn" onclick="setPeriod(12)" data-period="12">1年</button>
+        <button class="period-btn" onclick="setPeriod(0)" data-period="0">全期間</button>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">発注件数（合計）</div><div class="kpi-value" id="itemsReportCount">0件</div></div>
+        <div class="kpi-card"><div class="kpi-label">発注金額（合計）</div><div class="kpi-value" id="itemsReportTotal">—</div></div>
+      </div>
+      <div class="report-table-wrap">
+        <table class="report-table">
+          <thead><tr><th>品目</th><th class="r">回数</th><th class="r">合計金額</th><th class="r">平均単価</th></tr></thead>
+          <tbody id="reportItemsBody"></tbody>
+        </table>
+      </div>
+      <p class="section-note">※ 金額未入力の発注は金額集計に含まれません</p>
+    </div>
+    <div style="height:80px;"></div>
+  </div>
+
+  <!-- 設定 -->
+  <div class="page" id="page-settings">
+    <div class="card" style="margin-top:4px;">
+      <div style="font-weight:500;margin-bottom:12px;">🔔 通知設定</div>
+      <div class="form-group">
+        <label>通知先メールアドレス</label>
+        <input type="email" id="notifyEmail" placeholder="例：your@email.com">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button onclick="saveNotifyEmail()" style="flex:1;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;">保存</button>
+        <button onclick="sendTestEmail()" style="flex:1;padding:11px;background:var(--bg);color:var(--text);border:0.5px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;">テスト送信</button>
+      </div>
+    </div>
+    <div class="card" style="margin-top:8px;">
+      <div style="font-weight:500;margin-bottom:12px;">🔔 ブラウザ通知</div>
+      <button onclick="requestNotifyPermission()" id="notifyPermBtn" style="width:100%;padding:11px;background:var(--bg);color:var(--text);border:0.5px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;">通知を許可する</button>
+      <p id="notifyPermStatus" style="font-size:12px;color:var(--text2);margin-top:8px;">タップして通知を有効にしてください。</p>
+    </div>
+    <div style="height:80px;"></div>
+  </div>
+</div>
+
+<button class="fab" id="fabBtn" style="display: flex;">＋</button>
+
+<!-- 品目モーダル -->
+<div class="modal-overlay" id="itemModal">
+  <div class="modal">
+    <h2 id="itemModalTitle">品目を追加</h2>
+    <input type="hidden" id="editId">
+    <div class="form-group"><label>品名 *</label><input type="text" id="fieldName" placeholder="例：洗剤A（業務用）"></div>
+    <div class="form-group"><label>カテゴリ *</label><input type="text" id="fieldCategory" placeholder="例：洗剤、ハンガー"></div>
+    <div class="form-group"><label>単位</label><input type="text" id="fieldUnit" value="個" placeholder="本、枚、個、袋"></div>
+    <div class="form-group">
+      <label>単価（円）<span style="font-size:11px;color:var(--text2);margin-left:4px;">任意・発注時に自動計算されます</span></label>
+      <input type="number" id="fieldPrice" min="0" placeholder="例：500">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="closeItemBtn">キャンセル</button>
+      <button class="btn-save" id="saveItemBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 発注モーダル（1品目） -->
+<div class="modal-overlay" id="orderModal">
+  <div class="modal">
+    <h2>発注を登録する</h2>
+    <input type="hidden" id="orderItemId">
+    <input type="hidden" id="orderUnitPrice">
+    <p id="orderItemName" style="font-weight:500;margin-bottom:12px;font-size:15px;"></p>
+    <div class="form-group">
+      <label>発注数量</label>
+      <input type="number" id="orderQty" value="1" min="1" oninput="recalcOrderPrice()">
+    </div>
+    <div class="form-group">
+      <label>金額（円）<span style="font-size:11px;color:var(--text2);margin-left:4px;">任意・直接編集も可</span></label>
+      <input type="number" id="orderPrice" min="0" placeholder="例：3500">
+      <p class="unit-price-hint" id="unitPriceHint" style="display:none;"></p>
+    </div>
+    <div class="order-total-display" id="orderTotalDisplay" style="display:none;">
+      <span class="order-total-label">💰 発注合計</span>
+      <span class="order-total-value" id="orderTotalValue"></span>
+    </div>
+    <div class="form-group" style="margin-top:12px;">
+      <label>納入希望日<span style="font-size:11px;color:var(--text2);margin-left:4px;">任意・未入力は「最短」扱い</span></label>
+      <input type="date" id="orderDeliveryDate">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="closeOrderBtn">キャンセル</button>
+      <button class="btn-save" id="submitOrderBtn">発注登録</button>
+    </div>
+  </div>
+</div>
+
+<!-- まとめて発注モーダル -->
+<div class="modal-overlay" id="bulkOrderModal">
+  <div class="modal">
+    <h2>📋 まとめて発注登録</h2>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">発注する品目にチェックを入れて数量・金額を設定してください</p>
+    <div id="bulkOrderList"></div>
+    <div class="bulk-total-row" id="bulkTotalRow" style="display:none;">
+      <span class="bulk-total-label">合計金額</span>
+      <span class="bulk-total-value" id="bulkTotalValue"></span>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="closeBulkOrderBtn">キャンセル</button>
+      <button class="btn-save" id="submitBulkOrderBtn">発注登録</button>
+    </div>
+  </div>
+</div>
+
+<script src="./発注管理_files/supabase-js@2"></script>
+<script>
+var sb = null;
+var items = [];
+var orders = [];
+var realtimeCh = null;
+var deferredPrompt = null;
+var currentReportTab = 'monthly';
+var reportYear = new Date().getFullYear();
+var reportMonth = new Date().getMonth();
+var currentPeriodMonths = 3;
+
+var SUPABASE_URL = 'https://bhfxfiirkryndorgykzc.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoZnhmaWlya3J5bmRvcmd5a3pjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxOTI3MzQsImV4cCI6MjA5MTc2ODczNH0.3qXRed5-keTHDvXVXjSrErq1tqzZxz2x9x4KnNG-OPw';
+
+function setupPWA() {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#185FA5"/><text x="96" y="130" font-size="100" text-anchor="middle" fill="white">📦</text></svg>';
+  var iconUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+  document.getElementById('appleIcon').href = iconUrl;
+  var manifest = { name: '洗濯工場 発注管理', short_name: '発注管理', start_url: location.href, display: 'standalone', background_color: '#185FA5', theme_color: '#185FA5', lang: 'ja', icons: [{ src: iconUrl, sizes: '192x192', type: 'image/svg+xml' }] };
+  var blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+  document.getElementById('manifestLink').href = URL.createObjectURL(blob);
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function showErr(msg) { var e = document.getElementById('errBox'); e.textContent = msg; e.style.display = 'block'; }
+function hideErr() { document.getElementById('errBox').style.display = 'none'; }
+function setStatus(cls, label) {
+  var d = document.getElementById('statusDot');
+  d.className = 'status-dot' + (cls ? ' ' + cls : '');
+  document.getElementById('syncLabel').textContent = label;
+}
+
+function connect(url, key) {
+  try {
+    sb = window.supabase.createClient(url, key);
+    document.getElementById('mainApp').style.display = 'block';
+    document.getElementById('fabBtn').style.display = 'flex';
+    document.getElementById('reloadBtn').style.display = 'flex';
+    hideErr();
+    setStatus('', '接続中...');
+    loadAll();
+    subscribeRealtime();
+  } catch(e) {
+    showErr('接続エラー：' + e.message);
+  }
+}
+
+async function loadAll() {
+  await Promise.all([loadItems(), loadOrders()]);
+  setStatus('connected', '同期済み');
+}
+
+async function loadItems() {
+  var r = await sb.from('items').select('*').order('category').order('name');
+  if (r.error) { setStatus('error', 'エラー'); showErr('取得エラー：' + r.error.message); return; }
+  items = r.data;
+  updateCategoryFilter();
+  updateOrderItemFilter();
+  renderItems();
+}
+
+async function loadOrders() {
+  var r = await sb.from('orders').select('*, items(name,unit,price)').order('created_at', { ascending: false });
+  if (r.error) return;
+  // 既存のordered/receivedをcompletedとして扱う
+  orders = r.data.map(function(o) {
+    if (o.status === 'ordered' || o.status === 'received') {
+      return Object.assign({}, o, { status: 'completed' });
+    }
+    return o;
+  });
+  renderOrders();
+}
+
+function subscribeRealtime() {
+  if (realtimeCh) sb.removeChannel(realtimeCh);
+  realtimeCh = sb.channel('order-sync')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, function() { loadItems(); })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, function() { loadOrders(); })
+    .subscribe(function(s) { if (s === 'SUBSCRIBED') setStatus('connected', 'リアルタイム同期中'); });
+}
+
+function updateCategoryFilter() {
+  var cats = [...new Set(items.map(function(i) { return i.category; }))].sort();
+  var sel = document.getElementById('categoryFilter');
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">全カテゴリ</option>' + cats.map(function(c) {
+    return '<option value="' + esc(c) + '"' + (c === cur ? ' selected' : '') + '>' + esc(c) + '</option>';
+  }).join('');
+}
+
+function updateOrderItemFilter() {
+  var sel = document.getElementById('orderItemFilter');
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">全品目</option>' + items.map(function(i) {
+    return '<option value="' + esc(i.id) + '"' + (i.id === cur ? ' selected' : '') + '>' + esc(i.name) + '</option>';
+  }).join('');
+}
+
+// 品目一覧
+function renderItems() {
+  var search = document.getElementById('searchInput').value.toLowerCase();
+  var cat = document.getElementById('categoryFilter').value;
+  var f = items.filter(function(i) {
+    if (search && i.name.toLowerCase().indexOf(search) === -1) return false;
+    if (cat && i.category !== cat) return false;
+    return true;
+  });
+  var el = document.getElementById('itemList');
+  if (!f.length) { el.innerHTML = '<div class="empty">該当する品目がありません</div>'; return; }
+  el.innerHTML = f.map(function(item) {
+    var priceStr = (item.price !== null && item.price !== undefined && item.price > 0)
+      ? '単価 ¥' + Number(item.price).toLocaleString() + ' / ' + esc(item.unit)
+      : '単価未設定';
+    return '<div class="card">'
+      + '<div class="item-header"><span class="item-name">' + esc(item.name) + '</span></div>'
+      + '<div class="item-meta">' + esc(item.category) + '</div>'
+      + '<div class="item-price">' + priceStr + '</div>'
+      + '<div class="action-row">'
+      + '<button class="btn-sm primary" onclick="openOrderModal(\'' + item.id + '\',\'' + esc(item.name) + '\')">発注登録</button>'
+      + '<button class="btn-sm" onclick="openEditModal(\'' + item.id + '\')">編集</button>'
+      + '<button class="btn-sm danger" onclick="deleteItem(\'' + item.id + '\',\'' + esc(item.name) + '\')">削除</button>'
+      + '</div></div>';
+  }).join('');
+}
+
+// 発注一覧
+function renderOrders() {
+  var sf = document.getElementById('orderStatusFilter').value;
+  var si = document.getElementById('orderItemFilter').value;
+  var f = orders.filter(function(o) {
+    if (sf && o.status !== sf) return false;
+    if (si && o.item_id !== si) return false;
+    return true;
+  });
+  var el = document.getElementById('orderList');
+  if (!f.length) { el.innerHTML = '<div class="empty">発注記録がありません</div>'; return; }
+  var sm = { pending: '発注待ち', completed: '完了' };
+  el.innerHTML = f.map(function(o) {
+    var nm = o.items ? o.items.name : '（削除済み）';
+    var un = o.items ? o.items.unit : '';
+    var dt = new Date(o.created_at).toLocaleDateString('ja-JP');
+    var priceStr = (o.price !== null && o.price !== undefined && String(o.price) !== '' && Number(o.price) > 0)
+      ? '¥' + Number(o.price).toLocaleString() : '—';
+    var delivStr = o.delivery_date ? o.delivery_date : '最短';
+    var ac = '';
+    if (o.status === 'pending') {
+      ac += '<button class="btn-complete" onclick="completeOrder(\'' + o.id + '\')">完了にする</button>';
+    }
+    ac += '<button class="btn-del-order" onclick="deleteOrder(\'' + o.id + '\')">削除</button>';
+    return '<div class="order-card">'
+      + '<div class="order-header"><span class="order-name">' + esc(nm) + '</span><span class="badge ' + o.status + '">' + (sm[o.status] || o.status) + '</span></div>'
+      + '<div class="order-detail">'
+      + '数量：' + o.quantity + esc(un) + '　金額：' + priceStr + '<br>'
+      + '登録日：' + dt + '　納入希望：' + esc(delivStr)
+      + '</div>'
+      + '<div class="order-actions">' + ac + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+async function completeOrder(id) {
+  var o = orders.find(function(o) { return o.id === id; });
+  if (o) { o.status = 'completed'; renderOrders(); }
+  await sb.from('orders').update({ status: 'completed', updated_at: new Date().toISOString() }).eq('id', id);
+}
+
+async function deleteOrder(id) {
+  if (!confirm('この発注記録を削除しますか？')) return;
+  orders = orders.filter(function(o) { return o.id !== id; });
+  renderOrders();
+  await sb.from('orders').delete().eq('id', id);
+}
+
+// 品目モーダル
+function openAddModal() {
+  document.getElementById('itemModalTitle').textContent = '品目を追加';
+  document.getElementById('editId').value = '';
+  document.getElementById('fieldName').value = '';
+  document.getElementById('fieldCategory').value = '';
+  document.getElementById('fieldUnit').value = '個';
+  document.getElementById('fieldPrice').value = '';
+  document.getElementById('itemModal').classList.add('open');
+}
+
+function openEditModal(id) {
+  var item = items.find(function(i) { return i.id === id; });
+  if (!item) return;
+  document.getElementById('itemModalTitle').textContent = '品目を編集';
+  document.getElementById('editId').value = id;
+  document.getElementById('fieldName').value = item.name;
+  document.getElementById('fieldCategory').value = item.category;
+  document.getElementById('fieldUnit').value = item.unit;
+  document.getElementById('fieldPrice').value = (item.price !== null && item.price !== undefined) ? item.price : '';
+  document.getElementById('itemModal').classList.add('open');
+}
+
+function closeItemModal() { document.getElementById('itemModal').classList.remove('open'); }
+
+async function saveItem() {
+  var id = document.getElementById('editId').value;
+  var priceRaw = document.getElementById('fieldPrice').value.trim();
+  var data = {
+    name: document.getElementById('fieldName').value.trim(),
+    category: document.getElementById('fieldCategory').value.trim(),
+    unit: document.getElementById('fieldUnit').value.trim() || '個',
+    price: (priceRaw !== '' && parseInt(priceRaw) >= 0) ? parseInt(priceRaw) : null,
+    stock: 0,
+    min_stock: 0
+  };
+  if (!data.name || !data.category) { alert('品名とカテゴリは必須です'); return; }
+  if (id) { await sb.from('items').update(data).eq('id', id); }
+  else { await sb.from('items').insert(data); }
+  closeItemModal();
+}
+
+async function deleteItem(id, name) {
+  if (!confirm('「' + name + '」を削除しますか？')) return;
+  await sb.from('items').delete().eq('id', id);
+}
+
+// 発注モーダル（1品目）
+function openOrderModal(itemId, itemName) {
+  document.getElementById('orderItemId').value = itemId;
+  document.getElementById('orderItemName').textContent = itemName;
+  document.getElementById('orderQty').value = '1';
+  document.getElementById('orderDeliveryDate').value = '';
+  var item = items.find(function(i) { return i.id === itemId; });
+  var unitPrice = (item && item.price !== null && item.price !== undefined && item.price > 0) ? item.price : 0;
+  document.getElementById('orderUnitPrice').value = unitPrice;
+  var hint = document.getElementById('unitPriceHint');
+  if (unitPrice > 0) {
+    hint.textContent = '単価 ¥' + unitPrice.toLocaleString() + ' × 数量で自動計算されます';
+    hint.style.display = 'block';
+  } else {
+    hint.style.display = 'none';
+  }
+  document.getElementById('orderPrice').value = unitPrice > 0 ? unitPrice : '';
+  recalcOrderPrice();
+  document.getElementById('orderModal').classList.add('open');
+}
+
+function recalcOrderPrice() {
+  var unitPrice = parseInt(document.getElementById('orderUnitPrice').value) || 0;
+  var qty = parseInt(document.getElementById('orderQty').value) || 1;
+  var totalDisplay = document.getElementById('orderTotalDisplay');
+  if (unitPrice > 0) {
+    var total = unitPrice * qty;
+    document.getElementById('orderPrice').value = total;
+    document.getElementById('orderTotalValue').textContent = '¥' + total.toLocaleString();
+    totalDisplay.style.display = 'flex';
+  } else {
+    totalDisplay.style.display = 'none';
+  }
+}
+
+function closeOrderModal() { document.getElementById('orderModal').classList.remove('open'); }
+
+async function submitOrder() {
+  var itemId = document.getElementById('orderItemId').value;
+  var itemName = document.getElementById('orderItemName').textContent;
+  var qty = parseInt(document.getElementById('orderQty').value) || 1;
+  var priceRaw = document.getElementById('orderPrice').value.trim();
+  var price = (priceRaw !== '' && parseInt(priceRaw) > 0) ? parseInt(priceRaw) : null;
+  var deliveryDate = document.getElementById('orderDeliveryDate').value || null;
+  var insertData = { item_id: itemId, quantity: qty, status: 'pending' };
+  if (price !== null) insertData.price = price;
+  if (deliveryDate) insertData.delivery_date = deliveryDate;
+  var r = await sb.from('orders').insert(insertData).select('*, items(name,unit,price)');
+  if (r.error) { showErr('発注エラー：' + r.error.message); return; }
+  if (r.data && r.data.length > 0) orders.unshift(r.data[0]);
+  closeOrderModal();
+  switchTab('orders');
+  notifyNewOrder(itemName, qty);
+}
+
+// まとめて発注モーダル
+function openBulkOrderModal() {
+  if (!items.length) { alert('品目が登録されていません'); return; }
+  var pendingItemIds = new Set(orders.filter(function(o) { return o.status === 'pending'; }).map(function(o) { return o.item_id; }));
+  var html = items.map(function(item, idx) {
+    var unitPrice = (item.price !== null && item.price !== undefined && item.price > 0) ? item.price : 0;
+    var isPending = pendingItemIds.has(item.id);
+    var checkedAttr = '';
+    var disabledStyle = '';
+    if (isPending) {
+      disabledStyle = 'opacity:0.4;pointer-events:none;';
+    }
+    return '<div class="bulk-item-row" id="bulk-row-' + idx + '" style="' + disabledStyle + '">'
+      + '<input type="checkbox" id="bulk-check-' + idx + '" data-item-id="' + esc(item.id) + '" onchange="recalcBulkTotal()" style="width:18px;height:18px;flex-shrink:0;margin-top:4px;"' + (isPending ? ' disabled' : '') + '>'
+      + '<div class="bulk-item-info">'
+      + '<div class="bulk-item-name">' + esc(item.name) + (isPending ? ' <span style="font-size:10px;color:var(--blue-text);">[発注待ち]</span>' : '') + '</div>'
+      + '<div class="bulk-item-sub">' + esc(item.category) + (unitPrice > 0 ? '　単価 ¥' + unitPrice.toLocaleString() : '') + '</div>'
+      + '</div>'
+      + '<div class="bulk-right">'
+      + '<div class="bulk-qty-wrap">'
+      + '<button class="bulk-qty-btn" onclick="changeBulkQty(' + idx + ',-1)">－</button>'
+      + '<input class="bulk-qty-input" type="number" id="bulk-qty-' + idx + '" value="1" min="1" data-unit-price="' + unitPrice + '" oninput="recalcBulkRow(' + idx + ')">'
+      + '<button class="bulk-qty-btn" onclick="changeBulkQty(' + idx + ',1)">＋</button>'
+      + '</div>'
+      + '<input class="bulk-price-input" type="number" id="bulk-price-' + idx + '" value="' + (unitPrice > 0 ? unitPrice : '') + '" min="0" placeholder="金額(円)" oninput="recalcBulkTotal()">'
+      + '<input class="bulk-date-input" type="date" id="bulk-date-' + idx + '">'
+      + '</div>'
+      + '</div>';
+  }).join('');
+  document.getElementById('bulkOrderList').innerHTML = html;
+  recalcBulkTotal();
+  document.getElementById('bulkOrderModal').classList.add('open');
+}
+
+function changeBulkQty(idx, delta) {
+  var input = document.getElementById('bulk-qty-' + idx);
+  var newVal = Math.max(1, (parseInt(input.value) || 1) + delta);
+  input.value = newVal;
+  recalcBulkRow(idx);
+}
+
+function recalcBulkRow(idx) {
+  var qtyInput = document.getElementById('bulk-qty-' + idx);
+  var priceInput = document.getElementById('bulk-price-' + idx);
+  var unitPrice = parseInt(qtyInput.getAttribute('data-unit-price')) || 0;
+  var qty = parseInt(qtyInput.value) || 1;
+  if (unitPrice > 0) priceInput.value = unitPrice * qty;
+  recalcBulkTotal();
+}
+
+function recalcBulkTotal() {
+  var total = 0;
+  var hasPrice = false;
+  items.forEach(function(_, idx) {
+    var chk = document.getElementById('bulk-check-' + idx);
+    var pEl = document.getElementById('bulk-price-' + idx);
+    if (chk && chk.checked && pEl) {
+      var p = parseInt(pEl.value) || 0;
+      if (p > 0) { total += p; hasPrice = true; }
+    }
+  });
+  var totalRow = document.getElementById('bulkTotalRow');
+  if (hasPrice) {
+    document.getElementById('bulkTotalValue').textContent = '¥' + total.toLocaleString();
+    totalRow.style.display = 'flex';
+  } else {
+    totalRow.style.display = 'none';
+  }
+}
+
+function closeBulkOrderModal() { document.getElementById('bulkOrderModal').classList.remove('open'); }
+
+async function submitBulkOrder() {
+  var rows = [];
+  items.forEach(function(item, idx) {
+    var chk = document.getElementById('bulk-check-' + idx);
+    if (!chk || !chk.checked) return;
+    var qty = parseInt(document.getElementById('bulk-qty-' + idx).value) || 1;
+    var priceRaw = document.getElementById('bulk-price-' + idx).value.trim();
+    var price = (priceRaw !== '' && parseInt(priceRaw) > 0) ? parseInt(priceRaw) : null;
+    var deliveryDate = document.getElementById('bulk-date-' + idx).value || null;
+    var row = { item_id: item.id, quantity: qty, status: 'pending' };
+    if (price !== null) row.price = price;
+    if (deliveryDate) row.delivery_date = deliveryDate;
+    rows.push(row);
+  });
+  if (!rows.length) { alert('品目を1つ以上チェックしてください'); return; }
+  var r = await sb.from('orders').insert(rows).select('*, items(name,unit,price)');
+  if (r.error) { showErr('発注エラー：' + r.error.message); return; }
+  if (r.data && r.data.length > 0) {
+    r.data.reverse().forEach(function(o) { orders.unshift(o); });
+  }
+  closeBulkOrderModal();
+  switchTab('orders');
+  renderOrders();
+}
+
+// レポート
+function switchReportTab(tab) {
+  currentReportTab = tab;
+  ['monthly', 'items'].forEach(function(t) {
+    document.getElementById('subtab-' + t).classList.toggle('active', tab === t);
+  });
+  document.getElementById('reportMonthlyPanel').style.display = tab === 'monthly' ? 'block' : 'none';
+  document.getElementById('reportItemsPanel').style.display = tab === 'items' ? 'block' : 'none';
+  if (tab === 'monthly') renderMonthlyReport();
+  if (tab === 'items') renderItemsReport();
+}
+
+function changeReportMonth(delta) {
+  reportMonth += delta;
+  if (reportMonth > 11) { reportMonth = 0; reportYear++; }
+  if (reportMonth < 0) { reportMonth = 11; reportYear--; }
+  renderMonthlyReport();
+}
+
+function renderMonthlyReport() {
+  var y = reportYear;
+  var m = reportMonth;
+  document.getElementById('reportMonthTitle').textContent = y + '年' + (m + 1) + '月';
+  var filtered = orders.filter(function(o) {
+    var d = new Date(o.created_at);
+    return d.getFullYear() === y && d.getMonth() === m;
+  });
+  var count = filtered.length;
+  var total = filtered.reduce(function(s, o) {
+    var p = (o.price !== null && o.price !== undefined && String(o.price) !== '') ? Number(o.price) : 0;
+    return s + (p > 0 ? p : 0);
+  }, 0);
+  document.getElementById('reportCount').textContent = count + '件';
+  document.getElementById('reportTotal').textContent = total > 0 ? '¥' + total.toLocaleString() : '—';
+
+  // 品目別内訳
+  var itemMap = {};
+  filtered.forEach(function(o) {
+    var nm = o.items ? o.items.name : '（削除済み）';
+    if (!itemMap[nm]) itemMap[nm] = { count: 0, total: 0 };
+    itemMap[nm].count++;
+    var p = (o.price !== null && o.price !== undefined && Number(o.price) > 0) ? Number(o.price) : 0;
+    itemMap[nm].total += p;
+  });
+  var itemBody = document.getElementById('reportMonthlyItemBody');
+  if (!Object.keys(itemMap).length) {
+    itemBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text2);padding:16px;">データなし</td></tr>';
+  } else {
+    itemBody.innerHTML = Object.keys(itemMap).sort().map(function(nm) {
+      var r = itemMap[nm];
+      return '<tr><td>' + esc(nm) + '</td><td class="r">' + r.count + '件</td><td class="r">' + (r.total > 0 ? '¥' + r.total.toLocaleString() : '—') + '</td></tr>';
+    }).join('');
+  }
+
+  // 発注一覧
+  var el = document.getElementById('reportMonthlyOrderList');
+  if (!filtered.length) { el.innerHTML = '<div class="empty">この月の発注記録はありません</div>'; return; }
+  var sm = { pending: '発注待ち', completed: '完了' };
+  el.innerHTML = filtered.map(function(o) {
+    var nm = o.items ? o.items.name : '（削除済み）';
+    var dt = new Date(o.created_at).toLocaleDateString('ja-JP');
+    var priceStr = (o.price !== null && o.price !== undefined && Number(o.price) > 0) ? '¥' + Number(o.price).toLocaleString() : '—';
+    return '<div class="order-card">'
+      + '<div class="order-header"><span class="order-name">' + esc(nm) + '</span><span class="badge ' + o.status + '">' + (sm[o.status] || o.status) + '</span></div>'
+      + '<div class="order-detail">数量：' + o.quantity + '　金額：' + priceStr + '　' + dt + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function setPeriod(months) {
+  currentPeriodMonths = months;
+  document.querySelectorAll('.period-btn').forEach(function(btn) {
+    btn.classList.toggle('active', parseInt(btn.getAttribute('data-period')) === months);
+  });
+  renderItemsReport();
+}
+
+function renderItemsReport() {
+  var now = new Date();
+  var filtered = orders.filter(function(o) {
+    if (currentPeriodMonths === 0) return true;
+    var d = new Date(o.created_at);
+    var diff = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
+    return diff < currentPeriodMonths;
+  });
+
+  var totalCount = filtered.length;
+  var totalAmount = filtered.reduce(function(s, o) {
+    return s + ((o.price !== null && Number(o.price) > 0) ? Number(o.price) : 0);
+  }, 0);
+  document.getElementById('itemsReportCount').textContent = totalCount + '件';
+  document.getElementById('itemsReportTotal').textContent = totalAmount > 0 ? '¥' + totalAmount.toLocaleString() : '—';
+
+  // 品目別集計
+  var itemMap = {};
+  filtered.forEach(function(o) {
+    var nm = o.items ? o.items.name : '（削除済み）';
+    if (!itemMap[nm]) itemMap[nm] = { count: 0, total: 0, hasPrice: false };
+    itemMap[nm].count++;
+    var p = (o.price !== null && o.price !== undefined && Number(o.price) > 0) ? Number(o.price) : 0;
+    if (p > 0) { itemMap[nm].total += p; itemMap[nm].hasPrice = true; }
+  });
+
+  var body = document.getElementById('reportItemsBody');
+  var sorted = Object.keys(itemMap).sort(function(a, b) { return itemMap[b].count - itemMap[a].count; });
+  if (!sorted.length) {
+    body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text2);padding:16px;">データなし</td></tr>';
+    return;
+  }
+  body.innerHTML = sorted.map(function(nm) {
+    var r = itemMap[nm];
+    var avg = (r.hasPrice && r.count > 0) ? Math.round(r.total / r.count) : null;
+    return '<tr>'
+      + '<td>' + esc(nm) + '</td>'
+      + '<td class="r">' + r.count + '回</td>'
+      + '<td class="r">' + (r.total > 0 ? '¥' + r.total.toLocaleString() : '—') + '</td>'
+      + '<td class="r">' + (avg !== null ? '¥' + avg.toLocaleString() : '—') + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
+function switchTab(tab) {
+  ['items', 'orders', 'report', 'settings'].forEach(function(t) {
+    document.getElementById('tab-' + t).classList.toggle('active', tab === t);
+    document.getElementById('page-' + t).classList.toggle('active', tab === t);
+  });
+  if (tab === 'orders') renderOrders();
+  if (tab === 'report') { renderMonthlyReport(); }
+  if (tab === 'settings') updateNotifyPermStatus();
+}
+
+async function manualReload() {
+  var btn = document.getElementById('reloadBtn');
+  btn.style.opacity = '0.4';
+  await loadAll();
+  btn.style.opacity = '1';
+}
+
+// 通知
+function getNotifyEmail() { return localStorage.getItem('notify_email') || ''; }
+function saveNotifyEmail() {
+  var v = document.getElementById('notifyEmail').value.trim();
+  if (!v) { alert('メールアドレスを入力してください'); return; }
+  localStorage.setItem('notify_email', v);
+  alert('保存しました');
+}
+async function sendTestEmail() {
+  var email = getNotifyEmail();
+  if (!email) { alert('先にメールアドレスを保存してください'); return; }
+  await callNotifyFunction({ type: 'test', to: email, itemName: 'テスト品目', stock: 0, minStock: 0 });
+  alert('テストメールを送信しました（' + email + '）');
+}
+async function callNotifyFunction(payload) {
+  var email = payload.to;
+  if (!email) { console.warn('通知先メールアドレスが未設定です'); return; }
+  try {
+    var subject, html;
+    if (payload.type === 'test') {
+      subject = '【発注管理アプリ】テストメール';
+      html = '<p>テストメールの送信に成功しました。</p><p>通知設定が正しく完了しています。</p>';
+    } else if (payload.type === 'order') {
+      subject = '【発注管理】発注登録：' + payload.itemName;
+      html = '<p>新しい発注が登録されました。</p>'
+        + '<table style="border-collapse:collapse;margin-top:12px;">'
+        + '<tr><td style="padding:4px 12px 4px 0;color:#666;">品目</td><td style="padding:4px 0;font-weight:bold;">' + payload.itemName + '</td></tr>'
+        + '<tr><td style="padding:4px 12px 4px 0;color:#666;">発注数</td><td style="padding:4px 0;">' + payload.stock + '</td></tr>'
+        + '</table>';
+    } else {
+      subject = '【発注管理】在庫不足：' + payload.itemName;
+      html = '<p>在庫が不足しています。発注をご検討ください。</p>'
+        + '<table style="border-collapse:collapse;margin-top:12px;">'
+        + '<tr><td style="padding:4px 12px 4px 0;color:#666;">品目</td><td style="padding:4px 0;font-weight:bold;">' + payload.itemName + '</td></tr>'
+        + '<tr><td style="padding:4px 12px 4px 0;color:#666;">現在庫</td><td style="padding:4px 0;">' + payload.stock + '</td></tr>'
+        + '</table>';
+    }
+    var r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer re_BZ3NTtJs_PkX7TPwVxA3bBZAY4Smsond3',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'onboarding@resend.dev',
+        to: [email],
+        subject: subject,
+        html: html
+      })
+    });
+    if (!r.ok) {
+      var err = await r.json().catch(function(){return{};});
+      console.warn('Resend エラー：', err);
+    }
+  } catch(e) { console.warn('通知送信エラー：', e); }
+}
+async function notifyNewOrder(itemName, qty) {
+  showBrowserNotify('📦 発注登録：' + itemName, '発注数：' + qty);
+  await callNotifyFunction({ type: 'order', to: getNotifyEmail(), itemName: itemName, stock: qty, minStock: 0 });
+}
+function showBrowserNotify(title, body) {
+  if (Notification.permission === 'granted') new Notification(title, { body: body });
+}
+function requestNotifyPermission() {
+  Notification.requestPermission().then(function(p) {
+    updateNotifyPermStatus();
+    if (p === 'granted') showBrowserNotify('通知テスト', 'ブラウザ通知が有効になりました');
+  });
+}
+function updateNotifyPermStatus() {
+  var p = Notification.permission;
+  var btn = document.getElementById('notifyPermBtn');
+  var st = document.getElementById('notifyPermStatus');
+  if (p === 'granted') { btn.textContent = '✅ 通知許可済み'; btn.style.background = 'var(--green-bg)'; btn.style.color = 'var(--green-text)'; st.textContent = 'ブラウザ通知が有効です。'; }
+  else if (p === 'denied') { btn.textContent = '🚫 通知がブロックされています'; btn.style.background = 'var(--red-bg)'; btn.style.color = 'var(--red-text)'; st.textContent = 'ブラウザの設定から通知を許可してください。'; }
+  else { btn.textContent = '通知を許可する'; st.textContent = 'タップして通知を有効にしてください。'; }
+  var saved = localStorage.getItem('notify_email');
+  if (saved) { var el = document.getElementById('notifyEmail'); if (el) el.value = saved; }
+}
+
+// PWA
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault(); deferredPrompt = e;
+  if (!localStorage.getItem('pwa_banner_closed')) document.getElementById('installBanner').style.display = 'block';
+});
+window.addEventListener('appinstalled', function() { document.getElementById('installBanner').style.display = 'none'; });
+
+// イベント登録
+document.getElementById('reloadBtn').addEventListener('click', manualReload);
+document.getElementById('installBtn').addEventListener('click', function() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; } });
+document.getElementById('closeBanner').addEventListener('click', function() { document.getElementById('installBanner').style.display = 'none'; localStorage.setItem('pwa_banner_closed', '1'); });
+document.getElementById('fabBtn').addEventListener('click', openAddModal);
+document.getElementById('closeItemBtn').addEventListener('click', closeItemModal);
+document.getElementById('saveItemBtn').addEventListener('click', saveItem);
+document.getElementById('closeOrderBtn').addEventListener('click', closeOrderModal);
+document.getElementById('submitOrderBtn').addEventListener('click', submitOrder);
+document.getElementById('closeBulkOrderBtn').addEventListener('click', closeBulkOrderModal);
+document.getElementById('submitBulkOrderBtn').addEventListener('click', submitBulkOrder);
+document.getElementById('itemModal').addEventListener('click', function(e) { if (e.target === this) closeItemModal(); });
+document.getElementById('orderModal').addEventListener('click', function(e) { if (e.target === this) closeOrderModal(); });
+document.getElementById('bulkOrderModal').addEventListener('click', function(e) { if (e.target === this) closeBulkOrderModal(); });
+
+setupPWA();
+
+window.addEventListener('load', function() {
+  connect(SUPABASE_URL, SUPABASE_KEY);
+});
+</script>
+
+
+</body></html>
